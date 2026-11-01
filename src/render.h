@@ -2,6 +2,7 @@
 #include "assets.h"
 #include "draw.h"
 #include "game.h"
+#include "composites.h"
 
 namespace nova {
 class Renderer {
@@ -17,6 +18,7 @@ public:
     Canvas canvas;
 private:
     Assets* assets_;
+    Composites composites_;
     int bodies_[BODY_COUNT],enemies_[ENEMY_COUNT];
     int bullets_[13],constructs_[9],pickups_[4];
     int weapon_icons_[WEAPON_COUNT],shield_icons_[SHIELD_COUNT],mod_icons_[MOD_COUNT];

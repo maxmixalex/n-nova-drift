@@ -193,7 +193,7 @@ static void process_upgrade(const Input& in) {
     move_menu(in,3,49,36,12,296);
     game.selected_offer=uint8_t(selection);selection=old;
     if(pressed(in,ButtonReroll)||(in.pointer_pressed&&hit(227,23,82,22))) {
-        if(!game.rerollOffers())notice(tr("No rerolls left.","重掷次数不足。"));
+        if(!game.rerollOffers())notice(tr("Reroll unavailable.","无法重掷。"));
     }
     int chosen=-1;
     if(pressed(in,Button1))chosen=0;

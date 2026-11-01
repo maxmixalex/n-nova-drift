@@ -16,7 +16,9 @@ converter.exe
 
 The supplied Windows binary targets 64-bit Windows 10/11. The Linux binary is
 invoked as `./converter`. Both create `nNova/data` inside the
-game folder. Copy that data directory beside the separately supplied `nNova.tns`
+game folder. When launched from another working directory, it automatically
+checks for `data.win` beside the executable after checking the current directory.
+An explicit game path always takes precedence. Copy that data directory beside the separately supplied `nNova.tns`
 launcher. On the calculator the resulting layout is:
 
 ```text
@@ -46,6 +48,11 @@ the completed packs. `--verify-pack DIRECTORY` independently checks an existing
 data directory, including its CRCs, frame boundaries, fonts, and language packs.
 `--self-test` runs small synthetic codec tests without copyrighted game files.
 
+The default output contains only the English and Simplified Chinese language
+packs used by the launcher. Add `--all-locales` to export the original data for
+all 11 available languages for inspection or future development; this does not
+add support for those languages to the current launcher.
+
 All original animation frames are retained by default. The optional
 `--compact-animation 12` samples long animations down to at most 12 frames;
 that explicitly trades animation fidelity for space. It is unnecessary for the
@@ -71,7 +78,7 @@ of at most 2 MiB. The launcher expands a frame only on a cache miss and uses a
 bounded 2 MiB pixel cache, so normal draws do not perform decompression.
 
 The original Roboto Condensed and Noto Sans SC fonts are rasterized at 12 pixels
-for English and Simplified Chinese. The language files preserve all original
+for English and Simplified Chinese. The selected language files preserve all original
 CSV keys and UTF-8 values. Original GameMaker formatting tags and variable
 placeholders remain in full descriptions; the launcher decides how to display
 the subset it uses. Music and sound are omitted because the calculator target

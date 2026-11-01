@@ -23,6 +23,8 @@
 #define NOMINMAX
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
+#else
+#include <unistd.h>
 #endif
 #define STB_TRUETYPE_IMPLEMENTATION
 #include "third_party/stb_truetype.h"
@@ -46,6 +48,18 @@ static fs::path input_path(const char* text) {
 #else
     return fs::u8path(text);
 #endif
+}
+static fs::path executable_path(const char* argv0) {
+#ifdef _WIN32
+    std::wstring path(32768,L'\0');
+    DWORD size=GetModuleFileNameW(nullptr,path.data(),DWORD(path.size()));
+    if(size>0&&size<path.size()){path.resize(size);return fs::path(path);}
+#else
+    std::array<char,4096> path{};
+    auto size=readlink("/proc/self/exe",path.data(),path.size()-1);
+    if(size>0&&size<ssize_t(path.size()))return fs::u8path(std::string(path.data(),size_t(size)));
+#endif
+    return fs::absolute(input_path(argv0));
 }
 static Bytes read_file(const fs::path& path) {
     std::ifstream file(path, std::ios::binary | std::ios::ate);
@@ -336,8 +350,8 @@ static void self_test() {
     const std::string csv="key,English\r\nExample,\"line, with \"\"quotes\"\"\"\r\n";auto rows=parse_csv(Bytes(csv.begin(),csv.end()));require(rows.size()==2&&rows[1].size()==2&&rows[1][1]=="line, with \"quotes\"","CSV quoting test failed");
     std::cout<<"Self-test passed: "<<cases<<" codec patterns, malformed streams, CRC and CSV quoting.\n";
 }
-struct Options {fs::path source=".",output;bool verify=false;unsigned compact=0;};
-static Options options(int argc,char**argv){Options o;bool source=false;for(int i=1;i<argc;++i){std::string a=argv[i];if(a=="--help"||a=="-h"){std::cout<<"nNova converter - run beside your own Nova Drift data.win\n\nUsage: converter [GAME_DIRECTORY] [--output DIRECTORY] [--verify]\n                 [--compact-animation MAX_FRAMES]\n\nDefault output: GAME_DIRECTORY/nNova/data\nDefault conversion preserves every animation frame.\nAlso: converter --verify-pack DIRECTORY | converter --self-test\nNo Python, GameMaker runner, network, or game executable is needed.\n";std::exit(0);}else if(a=="--output"){require(++i<argc,"--output needs a directory");o.output=input_path(argv[i]);}else if(a=="--verify")o.verify=true;else if(a=="--full-animation")o.compact=0;else if(a=="--compact-animation"){require(++i<argc,"--compact-animation needs a frame limit");o.compact=unsigned(std::stoul(argv[i]));require(o.compact>=2&&o.compact<=4096,"Frame limit must be 2..4096");}else if(!a.empty()&&a[0]=='-')throw std::runtime_error("Unknown option: "+a);else{require(!source,"Only one game directory is accepted");o.source=fs::u8path(a);source=true;}}if(o.output.empty())o.output=o.source/"nNova"/"data";return o;}
+struct Options {fs::path source=".",output;bool verify=false,all_locales=false;unsigned compact=0;};
+static Options options(int argc,char**argv){Options o;bool source=false;for(int i=1;i<argc;++i){std::string a=argv[i];if(a=="--help"||a=="-h"){std::cout<<"nNova converter - run beside your own Nova Drift data.win\n\nUsage: converter [GAME_DIRECTORY] [--output DIRECTORY] [--verify]\n                 [--all-locales] [--compact-animation MAX_FRAMES]\n\nDefault output: GAME_DIRECTORY/nNova/data\nNo source argument: find data.win in CWD, then beside this executable.\nDefault languages: English and Simplified Chinese.\nDefault conversion preserves every animation frame.\nAlso: converter --verify-pack DIRECTORY | converter --self-test\nNo Python, GameMaker runner, network, or game executable is needed.\n";std::exit(0);}else if(a=="--output"){require(++i<argc,"--output needs a directory");o.output=input_path(argv[i]);}else if(a=="--verify")o.verify=true;else if(a=="--all-locales")o.all_locales=true;else if(a=="--full-animation")o.compact=0;else if(a=="--compact-animation"){require(++i<argc,"--compact-animation needs a frame limit");o.compact=unsigned(std::stoul(argv[i]));require(o.compact>=2&&o.compact<=4096,"Frame limit must be 2..4096");}else if(!a.empty()&&a[0]=='-')throw std::runtime_error("Unknown option: "+a);else{require(!source,"Only one game directory is accepted");o.source=fs::u8path(a);source=true;}}if(!source&&!fs::is_regular_file(o.source/"data.win")){fs::path beside=executable_path(argv[0]).parent_path();if(fs::is_regular_file(beside/"data.win"))o.source=beside;}if(o.output.empty())o.output=o.source/"nNova"/"data";return o;}
 
 int main(int argc,char**argv)try {
     if(argc==2&&std::string(argv[1])=="--self-test"){self_test();return 0;}
@@ -373,9 +387,14 @@ int main(int argc,char**argv)try {
     unsigned eng_glyphs=write_font(opt.source/"RobotoCondensed-Regular.ttf",english,opt.output/"nNova.eng.font.dat.tns");
     unsigned zhs_glyphs=write_font(opt.source/"NotoSansSC-Medium.ttf",chinese,opt.output/"nNova.zhs.font.dat.tns");
     const std::pair<const char*,const char*>languages[]={{"localization.csv","eng"},{"chineseSimplified.csv","zhs"},{"chineseTraditional.csv","zht"},{"japanese.csv","jpn"},{"korean.csv","kor"},{"german.csv","deu"},{"french.csv","fra"},{"spanish.csv","spa"},{"russian.csv","rus"},{"polish.csv","pol"},{"brazilianPortuguese.csv","por"}};
-    for(const auto&l:languages)if(fs::exists(opt.source/l.first))write_text_pack(read_file(opt.source/l.first),opt.output/(std::string("nNova.")+l.second+".locale.dat.tns"));
+    for(const auto&l:languages) {
+        fs::path destination=opt.output/(std::string("nNova.")+l.second+".locale.dat.tns");
+        bool selected=opt.all_locales||std::string(l.second)=="eng"||std::string(l.second)=="zhs";
+        if(selected&&fs::exists(opt.source/l.first))write_text_pack(read_file(opt.source/l.first),destination);
+        else if(!selected)fs::remove(destination); // remove only our known optional outputs
+    }
     for(const char*license:{"Roboto_LICENSE.txt","NotoSansSC-Medium_OFL.txt"})if(fs::exists(opt.source/license))fs::copy_file(opt.source/license,opt.output/license,fs::copy_options::overwrite_existing);
-    std::ofstream report(opt.output/"conversion-report.txt");report<<"nNova conversion report\nSource: owner-supplied GameMaker data.win\nSource bytes: "<<header.source_bytes<<"\nSource CRC32: "<<std::hex<<std::setw(8)<<std::setfill('0')<<header.source_crc32<<std::dec<<"\nSprites: "<<sprites.size()<<"\nFrames: "<<frames.size()<<"\nUnique stored frames: "<<frames.size()-duplicate_frames<<"\nGraphics packs: "<<writer.pack_count<<"\nIndex bytes: "<<index.size()<<"\nGraphics bytes: "<<writer.total<<"\nUncompressed resized pixels: "<<raw_bytes<<"\nEnglish glyphs: "<<eng_glyphs<<"\nSimplified Chinese glyphs: "<<zhs_glyphs<<"\nTarget: 320 x 240, straight RGB565 plus full 8-bit alpha\nResampling: area filter with premultiplied alpha; only fully transparent borders trimmed\nStorage: lossless adaptive raw/RLE, identical frames shared\nAnimation: "<<(opt.compact?"explicit compact sampling":"all source frames preserved")<<"\nRuntime: decompression only on cache miss, bounded 2 MiB pixel cache\nMusic/audio: intentionally not converted; calculator build has no audio output\nLocalization: all available CSV languages exported, English/Simplified Chinese glyph packs baked\n";
+    std::ofstream report(opt.output/"conversion-report.txt");report<<"nNova conversion report\nSource: owner-supplied GameMaker data.win\nSource bytes: "<<header.source_bytes<<"\nSource CRC32: "<<std::hex<<std::setw(8)<<std::setfill('0')<<header.source_crc32<<std::dec<<"\nSprites: "<<sprites.size()<<"\nFrames: "<<frames.size()<<"\nUnique stored frames: "<<frames.size()-duplicate_frames<<"\nGraphics packs: "<<writer.pack_count<<"\nIndex bytes: "<<index.size()<<"\nGraphics bytes: "<<writer.total<<"\nUncompressed resized pixels: "<<raw_bytes<<"\nEnglish glyphs: "<<eng_glyphs<<"\nSimplified Chinese glyphs: "<<zhs_glyphs<<"\nTarget: 320 x 240, straight RGB565 plus full 8-bit alpha\nResampling: area filter with premultiplied alpha; only fully transparent borders trimmed\nStorage: lossless adaptive raw/RLE, identical frames shared\nAnimation: "<<(opt.compact?"explicit compact sampling":"all source frames preserved")<<"\nRuntime: decompression only on cache miss, bounded 2 MiB pixel cache\nMusic/audio: intentionally not converted; calculator build has no audio output\nLocalization: "<<(opt.all_locales?"all available CSV languages exported":"English/Simplified Chinese only")<<"; English/Simplified Chinese glyph packs baked\n";
     require(bool(report),"Cannot write conversion report");
     if(opt.verify)verify_pack(opt.output);
     std::cout<<"Done: "<<opt.output.string()<<"\nGraphics + index: "<<writer.total+index.size()<<" bytes; "<<duplicate_frames<<" identical frames shared.\nCopy all *.dat.tns files into nNova/data beside nNova.tns.\n";return 0;

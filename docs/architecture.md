@@ -32,13 +32,13 @@ scale as their visible bounds grow.
 Frames are converted to straight RGB565 + alpha8. Identical converted frames
 share one payload. An individual frame uses raw pixels or a lossless RLE stream,
 whichever is smaller. Packs default to approximately 2 MiB shards, with an
-independent small index. The default retains every source animation frame.
+independent small index. The default retains every source animation frame. It emits the two locales supported by the native UI; `--all-locales` preserves the other source language dictionaries for development without increasing the default calculator installation.
 
 The runtime resolves sprite names once, looks up frames by index, and expands
 pixels only when a frame is first required. A fixed 2 MiB arena bounds the
 image cache. Filling it discards the old cache safely; the scene draws a returned
 sprite immediately and never retains pointers across a potential cache flush.
-There is no mandatory per-frame decompression of the active scene.
+There is no mandatory per-frame decompression of the active scene. Four multipart enemy assemblies reuse original component sprites; a 233,488-byte fixed cache prepares their mirrored and lit components once, without per-frame image allocation or flipping.
 
 Font and localization files are separate from graphics. English and Simplified
 Chinese fonts are rasterized from the supplied fonts at the display's UI size.

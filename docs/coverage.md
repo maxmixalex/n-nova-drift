@@ -8,7 +8,7 @@ The supplied `Nova Drift.zip` has 51 entries and 852,255,215 bytes of uncompress
 
 `localization.csv` exposes 37 gear titles (13 weapons, 14 bodies, 10 shields) and exactly 180 mod titles. `prefabPlayerBuilds.csv` and its snippets expose original gear/mod identifiers and build combinations. Most numerical descriptions contain unresolved engine-variable placeholders. Consequently the calculator's damage, cooldown, health, movement, radius, scaling, dependency and repetition limits are explicitly authored port values. They have not been recovered from the PC executable.
 
-The sprite exporter identifies 1,293 valid original sprite records. Content names and sprite references in the native tables are checked against those records. Composite bosses use selected original component sprites; their assembly, full animation rigs and original phase scripts are not recreated.
+The sprite exporter identifies 1,293 valid original sprite records. Content names and sprite references in the native tables are checked against those records. Dreadnought, Warbringer, Bulwark and Star Eater now combine original wings, guns, thrusters, glow layers, arms, legs, segments and/or eye sprites in bounded native assemblies. Those layouts and motions are adaptations; original rigs, independently simulated parts and original phase scripts are not reproduced. Other enemies use selected original sprites.
 
 ## Implemented native loop
 
@@ -47,7 +47,7 @@ Friendly and hostile projectile budgets are separate: a volley-heavy player cann
 - There is no original YYC runtime reconstruction or execution of the Windows executable. Native formulas, upgrade prerequisites, weapon timing, enemy AI, boss phases, formation generation, difficulty and progression are calculator-specific approximations.
 - The original full modifier algebra, all edge-case synergies, exact targeting/construct assembly rules, every enemy part/shield/rarity, and authored campaign waves are not reproduced. Some effects are intentionally represented by a simpler equivalent, such as repair pickups instead of separate original Nanotech/Armor Fragment power-up classes, and Research's defense bonus on spent rerolls in place of its original dedicated banishment UI.
 - All original gear is available to the native selection system. The original account unlock progression, achievement tracking, challenge/daily modes, full bestiary/glossary, Steam integration, cloud saves and online leaderboards are not recreated.
-- Visuals reuse downscaled original assets, with a compact native HUD/menu and native particles. Composite bosses, shaders, postprocessing, original animation timing, cinematic sequences and full PC GUI layouts are not reproduced.
+- Visuals reuse downscaled original assets, with a compact native HUD/menu and native particles. Four multipart enemies have native visual assemblies, but original part physics and animation rigs, shaders, postprocessing, most original animation timing, cinematic sequences and full PC GUI layouts are not reproduced.
 - The core does not reproduce PC music/audio streaming, mixer behavior or sound-effect playback.
 - Save files hold a version/size/checksummed native snapshot. Binary compatibility across future changes to the Game structure is not promised.
 - Desktop sanitizer and deterministic simulation results do not certify original-game equivalence or calculator performance. Real ARM/emulator performance measurements are recorded separately by the platform validation.

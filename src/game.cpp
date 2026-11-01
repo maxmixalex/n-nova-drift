@@ -368,7 +368,7 @@ void Game::updatePlayer(const GameInput &in) {
   uint8_t dash_angle=p.angle;
   if(m[M_X_STRAFE])dash_angle=(uint8_t)(p.angle+(in.left?-64:in.right?64:0));
   if(m[M_BLINK]) {int32_t ox=p.x,oy=p.y;p.x=wrap(p.x+dirX(dash_angle)*65,worldWidth());p.y=wrap(p.y+dirY(dash_angle)*65,worldHeight());blast(ox,oy,22,45);blast(p.x,p.y,22,45);emitEffect(ox,oy,FX_WARP,25,12,3);
-   if(m[M_X_DISPLACEMENT]){emitEffect(ox,oy,FX_BEAM,5,12,3,p.x,p.y);for(unsigned e=0;e<MAX_ENEMIES;e++)if(enemies[e].active&&sweptHit(ox,oy,p.x,p.y,enemies[e].x,enemies[e].y,enemies[e].radius+5))hitEnemy(e,100*stats.damage/100);}}
+   if(m[M_X_DISPLACEMENT]){emitEffect(ox,oy,FX_BEAM,5,12,3,ox+dirX(dash_angle)*65,oy+dirY(dash_angle)*65);for(unsigned e=0;e<MAX_ENEMIES;e++)if(enemies[e].active&&sweptHit(ox,oy,p.x,p.y,enemies[e].x,enemies[e].y,enemies[e].radius+5))hitEnemy(e,100*stats.damage/100);}}
   else {p.vx+=dirX(dash_angle)*3;p.vy+=dirY(dash_angle)*3;}
   dash_ticks_=12;
   p.invulnerable=maxv(p.invulnerable,12);p.ability_delay=m[M_POWER_RESERVES]?75:120;
@@ -414,7 +414,7 @@ void Game::updatePlayer(const GameInput &in) {
  if(frame%15==0&&(m[M_X_DYING_STAR]||(m[M_X_LANCE]&&speed>2*FP))){int radius=m[M_X_DYING_STAR]?80:25;
   emitEffect(p.x,p.y,FX_RING,radius,15,1);for(unsigned e=0;e<MAX_ENEMIES;e++)if(enemies[e].active&&distance2(p.x,p.y,enemies[e].x,enemies[e].y)<radius*radius)hitEnemy(e,m[M_X_DYING_STAR]?8:6,true);}
  if(frame%30==0){int self=3*m[M_X_DYING_STAR]+m[M_X_SOLAR_HEART]+m[M_X_APOTHEOSIS]+(m[M_X_LANCE]&&speed>2*FP?2:0);if(self)damagePlayer(self,true);}
- if(m[M_X_DISCORD]&&frame%8==0){uint8_t a=(uint8_t)(frame*5);int32_t ox=wrap(p.x+dirX(a)*34,worldWidth()),oy=wrap(p.y+dirY(a)*22,worldHeight());emitEffect(ox,oy,FX_BURST,4,10,3);int e=nearestEnemy(ox,oy,55);if(e>=0){emitEffect(ox,oy,FX_BEAM,1,5,3,enemies[e].x,enemies[e].y);hitEnemy(e,9);}}
+ if(m[M_X_DISCORD]&&frame%8==0){uint8_t a=(uint8_t)(frame*5);int32_t ox=wrap(p.x+dirX(a)*34,worldWidth()),oy=wrap(p.y+dirY(a)*22,worldHeight());emitEffect(ox,oy,FX_BURST,4,10,3);int e=nearestEnemy(ox,oy,55);if(e>=0){emitEffect(ox,oy,FX_BEAM,1,5,3,ox+delta(enemies[e].x,ox,worldWidth())*FP,oy+delta(enemies[e].y,oy,worldHeight())*FP);hitEnemy(e,9);}}
 }
 void Game::fireWeapon() {
  Player &p=player;const uint8_t *m=p.mods;const WeaponDef &w=weapons[p.weapon];

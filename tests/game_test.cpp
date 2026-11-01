@@ -72,6 +72,12 @@ int main() {
  empty(a);a.wild_mode=true;grant(a,M_X_POWER_SPIKE);assert(a.level==6&&a.banked_upgrades==5&&a.rerolls==0);
  empty(a);grant(a,M_DRONES);ticks(a,100);assert(a.constructCount()>0);grant(a,M_X_HIDDEN_POWER);ticks(a,120,fire);assert(a.bulletCount()==0&&a.constructCount()==0&&!a.canTakeMod(M_TURRET));
  empty(a);a.wild_mode=true;grant(a,M_X_BRAVADO);h=a.spawnEnemy(E_DRONE,20,20);assert(a.enemies[h].elite>=1);
+ empty(a);grant(a,M_X_DISPLACEMENT);a.player.x=318*FP;a.player.angle=0;GameInput dash={};dash.ability=true;a.tick(dash);bool unwrapped_beam=false;
+ for(unsigned j=0;j<MAX_EFFECTS;j++)if(a.effects[j].active&&a.effects[j].kind==FX_BEAM&&a.effects[j].x2>320*FP)unwrapped_beam=true;
+ assert(unwrapped_beam&&a.player.x<100*FP);
+ empty(a);a.wild_mode=true;grant(a,M_X_DISCORD);a.player.x=280*FP;target(a,5,120);ticks(a,8);unwrapped_beam=false;
+ for(unsigned j=0;j<MAX_EFFECTS;j++)if(a.effects[j].active&&a.effects[j].kind==FX_BEAM&&a.effects[j].x2>320*FP)unwrapped_beam=true;
+ assert(unwrapped_beam);
  empty(a);for(unsigned j=0;j<FRIENDLY_BULLETS;j++){Bullet &p=a.bullets[j];p={};p.active=1;p.life=300;p.x=5*FP;p.y=5*FP;p.radius=1;}
  h=a.spawnEnemy(E_SCION,200,40);a.enemies[h].age=31;a.enemies[h].fire_delay=1;a.tick({});unsigned hostile_count=0;
  for(unsigned j=FRIENDLY_BULLETS;j<MAX_BULLETS;j++)hostile_count+=a.bullets[j].active&&a.bullets[j].owner;

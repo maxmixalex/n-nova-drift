@@ -13,6 +13,7 @@ static const uint16_t Red=rgb(255,104,130);
 
 void Renderer::initialize(Assets* assets) {
     assets_=assets;
+    composites_.initialize(assets_);
     for(unsigned i=0;i<BODY_COUNT;++i)bodies_[i]=assets_->index_of(bodies[i].sprite);
     for(unsigned i=0;i<ENEMY_COUNT;++i)enemies_[i]=assets_->index_of(enemy_types[i].sprite);
     for(unsigned i=0;i<WEAPON_COUNT;++i)weapon_icons_[i]=assets_->index_of(weapons[i].sprite);
@@ -106,7 +107,8 @@ void Renderer::world(const Game& g,uint32_t ticks,bool effects) {
         unsigned frame=(g.frame/6)%3;
         int diameter=sceneRadius(e.radius*2+5);
         uint16_t tint=e.flash?White:65535;
-        if(!sprite(enemies_[e.type],frame,x,y,diameter,e.angle,tint))
+        if(!composites_.draw(canvas,e,x,y,diameter,ticks)&&
+           !sprite(enemies_[e.type],frame,x,y,diameter,e.angle,tint))
             fallbackShip(x,y,e.angle,sceneRadius(e.radius),e.elite?Red:Orange);
         if(e.elite)canvas.circle(x,y,sceneRadius(e.radius+2),Purple);
         if(e.burn_time && effects) {
@@ -259,7 +261,7 @@ void Renderer::world(const Game& g,uint32_t ticks,bool effects) {
     if(p.weapon==W_SALVO) {
         label[0]=0;append(label,sizeof(label),"SALVO ");appendNumber(label,sizeof(label),p.missiles);
         canvas.right(315,225,label,Cyan);
-    } else if(p.charge>0)canvas.bar(255,227,58,3,p.charge,90,Cyan);
+    } else if(p.charge>0)canvas.bar(255,227,58,3,p.charge,p.weapon==W_VORTEX?150:p.weapon==W_THERMAL_LANCE?90:180,Cyan);
     if(g.boss_index>=0 && g.boss_index<MAX_ENEMIES) {
         const Enemy& boss=g.enemies[g.boss_index];
         if(boss.active) {
