@@ -31,6 +31,8 @@ enum { SOURCE_UNDEFINED = (-2147483647-1), SOURCE_MAX_SPECS=8 };
 // values 6/7), not an angle in degrees.
 // spawn_parameter_q8 is formation-specific: arc angle/distance, or normalized
 // fixed-position offset; never globally interpret it as an angle.
+// iterate_spawn_parameter stores a normalized fixed-position increment in Q8;
+// it advances once per repeat (the original parameter is fractional).
 struct SourceSpawnSpec {
     int32_t enemy,count,entry,spawn,spawn_parameter_q8,rarity,repeating;
     int32_t repeat_frequency_ticks,behavior,follower,follower_count;

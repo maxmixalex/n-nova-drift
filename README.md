@@ -97,9 +97,10 @@ texture pages and the corresponding SPRT/TPAG metadata. Unsupported layouts
 fail with an error instead of silently creating empty sprites.
 
 The default converter preserves all animation frames and all eight alpha
-bits, crops transparent margins, and shares identical frames. Each image uses
-the smallest exact raw, run-length, palette, or planar RGB565/alpha representation;
-fonts and text
+bits, crops transparent margins, and shares identical frames. Each image selects
+among exact raw, run-length, palette, or planar RGB565/alpha representations;
+planar encoding must save at least 32 bytes and 5% to justify its extra decoding
+work. Fonts and text
 use a checked lossless wrapper decoded only when loading a language. Graphics
 are stored in sprite / frame order to reduce calculator file seeks. Pixel
 conversion to RGB565 and display-sized source resampling are the visual
@@ -153,9 +154,10 @@ live simulation. The current pointer-free Game state is **52,792 bytes**.
 Source reconstruction includes native prerequisites, career ranks, opening and
 curated waves, weapon and charge formulas, independent destructible components,
 boss phases, construct weapon inheritance and shield interactions. Dedicated
-regressions test these behaviors. The item audit distinguishes implementations
-awaiting clause-level verification from restored source formulas and known
-platform adaptations; these categories are not a claim of complete PC parity.
+regressions test these behaviors. The item audit checks catalog entries and
+eligibility; the separate [mechanic audit](docs/mod-audit-followup.md) identifies
+restored source formulas, tested behavior and remaining verification limits.
+Neither audit claims complete PC parity.
 Daily Challenge includes ten locally seeded modes, selectable calendar dates,
 rules and per-date local best scores. Comets, cargo trains and black holes have
 simulation and collision behavior. These local challenges do not reproduce
@@ -163,6 +165,13 @@ Steam's daily seed or online ranking. The built-in speakerless calculator target
 does not output PC audio. Steam services and online score services are not
 implemented. See
 [coverage](docs/coverage.md) for exact budgets, evidence and remaining boundaries.
+
+The [0.2.0 release validation](docs/validation-0.2.0.md) records the final
+32-test result, complete converter checks, ARM installation flows and controlled
+v2/v3 graphics measurements. In the 396 MHz Firebird configuration, the final
+pack measures **29.90–30.30 FPS** across the five stated samples; these are
+emulator measurements, not physical-calculator guarantees. The launcher plus
+all calculator data totals **7,955,364 bytes (7.59 MiB)** before user saves.
 
 ## Source layout
 

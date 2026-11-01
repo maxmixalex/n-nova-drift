@@ -157,8 +157,15 @@ bool Game::interceptAdvancedProjectile(unsigned bullet,int32_t ox,int32_t oy) {
    unsigned count=(unsigned)clamp((int)(((uint64_t)power*maxv(1,weapons[W_SWORDS].projectiles+stats.projectiles)+25)/50),1,48);
    unsigned damage=(unsigned)maxv(1,a.damage/2);int32_t x=b.x,y=b.y;destroyHostileBullet(bullet);
    if(daily(DAILY_SWORD))return true;
-   for(unsigned j=0;j<count;++j){int spread=((int)j*2-(int)count+1)*minv(32u,15+5*count)/(int)maxv(1u,count);
-    int at=emitBullet(x,y,(uint8_t)(a.heading+spread),6,(int)damage,SHOT_SPARK,40,0,2);if(at>=0)bullets[at].homing=2;
+   int half_spread=minv(32u,15+5*count);if(player.mods[M_FIRING_ARRAY])half_spread=half_spread*110/100;
+   for(unsigned j=0;j<count;++j){int spread=((int)j*2-(int)count+1)*half_spread/(int)maxv(1u,count);
+    int at=emitBullet(x,y,(uint8_t)(a.heading+spread),6,(int)damage,SHOT_SPARK,40,0,2);if(at>=0){
+     bullets[at].homing=2;
+     // specialCasesSwords is called by spawnSwordsSparks, not by the
+     // physical blade attack. Its no-spread interpolation starts at zero.
+     if(player.mods[M_FIRING_ARRAY]){int arc=2*((int)count-1)*half_spread/(int)maxv(1u,count);
+      applyFiringArray(bullets[at],firingArrayPosition(spread,arc,count,0));}
+    }
    }
    return true;
   }

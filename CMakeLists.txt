@@ -98,6 +98,7 @@ if(BUILD_TESTING)
   nova_core_test(nova-eclipse-tests eclipse-flow tests/eclipse_test.cpp)
   nova_core_test(nova-source-wave-tests source-waves tests/source_waves_test.cpp)
   nova_core_test(nova-daily-tests daily-challenge tests/daily_test.cpp)
+  nova_core_test(nova-firing-array-tests firing-array tests/firing_array_test.cpp)
   add_test(NAME converter-codec COMMAND nova-converter --self-test)
 
   # Both UI fixtures use the headless backend and the same NOVA_TEST hooks.

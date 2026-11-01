@@ -21,6 +21,8 @@ launcher does not execute the desktop executable. See [coverage.md](coverage.md)
 | `data/nNova.gfxNN.dat.tns` | Graphics payloads in sprite/frame order |
 | `data/nNova.*.font.dat.tns` | Five shared font groups |
 | `data/nNova.*.locale.dat.tns` | Eleven independently loaded languages |
+| `data/nNova.skins.dat.tns` | Converted cosmetic skin definitions |
+| `data/nNova.changelog.dat.tns` | Original scrollable changelog |
 | `state/` | Settings, bindings, account progression, scores, current run and local daily records |
 
 The reference format-v3 conversion has **22 data files and 7,579,988 bytes**:
@@ -63,7 +65,7 @@ a language is loaded, outside the per-frame drawing loop.
 
 Separate color/alpha streams reduce flash reads but require more CPU work to
 decode. A desktop memory-only benchmark cannot establish calculator load time.
-Release validation therefore compares both formats on the same ARM launcher and
+The [release validation](validation-0.2.0.md) compares both formats on the same ARM launcher and
 scenes, including cold-cache frames. Cached drawing runs neither image decoder.
 
 The simulation uses a fixed update step and bounded arrays for enemies,

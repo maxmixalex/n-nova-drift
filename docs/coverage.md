@@ -23,6 +23,13 @@ implemented mod behaviors, one blank original entry and two unavailable source
 placeholder entries. The executable audit also checks that the 180 source keys
 are unique and correspond to the original language catalogue when it is supplied.
 
+Havoc and Onslaught are the two unavailable entries. The original executable
+does not put either into its obtainable wild-mod pools; their original full
+descriptions contain only an ellipsis. Keeping these dormant source entries
+unavailable avoids offering an upgrade with no defined effect. The exact pool
+and object-reference evidence is recorded in
+[content-audit-sources.md](content-audit-sources.md).
+
 | Area | Implemented behavior and evidence | Main implementation / checks |
 | --- | --- | --- |
 | Equipment and upgrades | Native weapon, shield and body selection; source prerequisites and exclusion rules; normal, wild and super mods; recursive prerequisites, rerolls, Research banish and gear-decline flow | `content.cpp`, `progression.inc`, `mod_source_rules.inc`; content, game and application tests |
@@ -49,16 +56,19 @@ keeps best results for sixteen recent dates. Repeating a date repeats this port'
 seed and challenge configuration. A usable calculator RTC supplies the initial
 date; otherwise the saved/manual date remains available.
 
-Daily modes include the 20/45-upgrade Draft starts, the seven-mod Purity limit,
+Daily modes include the 20/45-upgrade Draft starts, the seven further mod selections after its initial Ataraxia in Purity,
 Cosmic Egg defence, sword and escort variants, the eleven-boss gauntlet and the
 other original daily rule sets. The egg has the recovered 15,000 health, its
-failure path and the recovered victory reward. Draft begins at the corresponding
+failure path and a victory reward of up to one million points, proportional to
+the egg's remaining health. Draft begins at the corresponding
 wave 40/200. Brothers in Arms shares damage, applies the recovered survivor
 hull/shield reduction after an escort dies and uses the recovered integrated
-weapon delay modifier. Sword includes its weapon restrictions, invulnerability,
+weapon delay modifier. Sword includes its weapon restrictions, sword-construct invulnerability,
 attack-speed and attraction changes. Turbo uses the source odd/even wave advance
 rule in addition to its speed, experience and score modifiers. Cosmic Ballet
 uses the more frequent curated-wave schedule, including its Turbo interaction.
+Non-endless daily victories also use the recovered time-bonus formula, with the
+Turbo and Boss Rush reduction. Effective simulated play time excludes menus.
 
 The local date rotation is deliberately described as **offline**. It does not
 claim to reproduce the PC service's date-to-challenge schedule or upload to its
@@ -106,6 +116,12 @@ source dimensions. RGB565 and source resampling for the target display are the
 image adaptations. The thirteen large/thin boss sprite groups retain additional
 source resolution. Animation-frame reduction is an explicit converter option
 and is not enabled in the delivered package.
+
+The [full sprite-reference audit](evidence/sprite-reference-audit.json) checks
+**522 unique runtime image references** against both the delivered index and
+sprite catalog, including 358 literal names, all 180 expanded mod-icon entries
+and 42 boss-part entries. It reports no missing names or invalid frame ranges;
+cosmic objects, boss attachments, effects and the ending are included.
 
 The current lossless pack revision reduces the preceding candidate's data from
 9,250,199 to **7,579,988 bytes**. Every decoded frame was compared between the two

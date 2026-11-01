@@ -2,7 +2,7 @@
 // Limits are shared by deployment and the Support Specialist / Overseer costs.
 // Mines and carrier swarms are basic; drones are standard; turrets/allies advanced.
 unsigned Game::constructLimit(unsigned kind) const {
- const uint8_t *m=player.mods;if(kind>=C_KIND_COUNT||m[M_X_HIDDEN_POWER])return 0;
+ const uint8_t *m=player.mods;if(kind>=C_KIND_COUNT||(m[M_X_HIDDEN_POWER]&&kind!=C_BASTION))return 0;
  unsigned basic=player.body==B_ENGINEER?2:0,advanced=player.body==B_ENGINEER?1:0;
  unsigned doubled=m[M_OVERSEER]?2:1;
  switch(kind){
@@ -86,7 +86,7 @@ int Game::constructPower(unsigned kind) const {
  return power;
 }
 int Game::spawnConstruct(unsigned kind) {
- if(kind>=C_KIND_COUNT||player.mods[M_X_HIDDEN_POWER])return -1;
+ if(kind>=C_KIND_COUNT||(player.mods[M_X_HIDDEN_POWER]&&kind!=C_BASTION))return -1;
  if(player.body==B_ARCHITECT&&constructCount()&&kind!=C_SWORD)return -1;
  const uint8_t *m=player.mods;
  for(unsigned i=0;i<MAX_CONSTRUCTS;i++)if(!constructs[i].active){

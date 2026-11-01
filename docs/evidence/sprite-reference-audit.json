@@ -1,0 +1,2626 @@
+{
+  "format": 3,
+  "index_sha256": "529051444f30455aeb0f8b9bb60f3bb4bced8c2a12d31d1d7eb7b4fec914287e",
+  "catalog_sprites": 1292,
+  "catalog_frames": 2590,
+  "graphics_packs": 3,
+  "literal_unique_count": 358,
+  "expanded_mod_entries": 180,
+  "expanded_boss_part_entries": 42,
+  "unique_references_checked": 522,
+  "literal_prefixes_expanded": {
+    "sHex": [
+      "src/content.cpp:48",
+      "src/content.cpp:49"
+    ]
+  },
+  "missing": {},
+  "invalid_frame_ranges": {},
+  "references": {
+    "sDreadnoughtWing": [
+      "src/boss_parts.inc:5",
+      "src/composites.cpp:13",
+      "compiled:part:0"
+    ],
+    "sDreadnoughtGunLarge": [
+      "src/boss_parts.inc:6",
+      "src/composites.cpp:13",
+      "compiled:part:1"
+    ],
+    "sDreadnoughtGunSmall": [
+      "src/boss_parts.inc:7",
+      "src/composites.cpp:14",
+      "compiled:part:2"
+    ],
+    "sWarbringerChasis": [
+      "src/boss_parts.inc:8",
+      "src/content.cpp:254",
+      "src/composites.cpp:15",
+      "compiled:part:3"
+    ],
+    "sWarbringerWing": [
+      "src/boss_parts.inc:9",
+      "src/composites.cpp:16",
+      "compiled:part:4"
+    ],
+    "sWarbringerThruster": [
+      "src/boss_parts.inc:10",
+      "src/composites.cpp:17",
+      "compiled:part:5"
+    ],
+    "sWarbringerBroadside": [
+      "src/boss_parts.inc:11",
+      "compiled:part:6"
+    ],
+    "sWarbringerLaser": [
+      "src/boss_parts.inc:12",
+      "compiled:part:7"
+    ],
+    "sCeratotitanThorax": [
+      "src/boss_parts.inc:13",
+      "compiled:part:8"
+    ],
+    "sCeratotitanPincer": [
+      "src/boss_parts.inc:14",
+      "compiled:part:9"
+    ],
+    "sCeratotitanElytra": [
+      "src/boss_parts.inc:15",
+      "compiled:part:10"
+    ],
+    "sCeratotitanWing": [
+      "src/boss_parts.inc:16",
+      "compiled:part:11"
+    ],
+    "sGlaucusSegment": [
+      "src/boss_parts.inc:17",
+      "compiled:part:12"
+    ],
+    "sGlaucusEye": [
+      "src/boss_parts.inc:18",
+      "compiled:part:13"
+    ],
+    "sStarEaterSegment": [
+      "src/boss_parts.inc:19",
+      "src/composites.cpp:20",
+      "compiled:part:14"
+    ],
+    "sStarEaterEye": [
+      "src/boss_parts.inc:20",
+      "src/content.cpp:256",
+      "src/composites.cpp:21",
+      "compiled:part:15"
+    ],
+    "sStarEaterAbdomen": [
+      "src/boss_parts.inc:21",
+      "src/composites.cpp:19",
+      "compiled:part:16"
+    ],
+    "sStationNode": [
+      "src/boss_parts.inc:22",
+      "compiled:part:17"
+    ],
+    "sStation": [
+      "src/boss_parts.inc:23",
+      "src/content.cpp:253",
+      "compiled:part:18"
+    ],
+    "sBulwarkBarrierDim": [
+      "src/boss_parts.inc:24",
+      "src/composites.cpp:242",
+      "compiled:part:19"
+    ],
+    "sBulwarkBody": [
+      "src/boss_parts.inc:25",
+      "src/content.cpp:241",
+      "src/composites.cpp:18",
+      "compiled:part:20"
+    ],
+    "sBulwarkBody2": [
+      "src/boss_parts.inc:26",
+      "compiled:part:21"
+    ],
+    "sBulwarkBody3": [
+      "src/boss_parts.inc:27",
+      "compiled:part:22"
+    ],
+    "sBulwarkArm": [
+      "src/boss_parts.inc:28",
+      "src/composites.cpp:18",
+      "compiled:part:23"
+    ],
+    "sBulwarkTail": [
+      "src/boss_parts.inc:29",
+      "src/composites.cpp:19",
+      "compiled:part:24"
+    ],
+    "sBulwarkThruster": [
+      "src/boss_parts.inc:30",
+      "compiled:part:25"
+    ],
+    "sBulwarkThrusterLarge": [
+      "src/boss_parts.inc:31",
+      "compiled:part:26"
+    ],
+    "sWormHead": [
+      "src/boss_parts.inc:32",
+      "src/content.cpp:275",
+      "compiled:part:27"
+    ],
+    "sWormBody": [
+      "src/boss_parts.inc:33",
+      "compiled:part:28"
+    ],
+    "sGaussJawLeft": [
+      "src/boss_parts.inc:34",
+      "compiled:part:29"
+    ],
+    "sGaussJawRight": [
+      "src/boss_parts.inc:35",
+      "compiled:part:30"
+    ],
+    "sGaussJawLeft2": [
+      "src/boss_parts.inc:36",
+      "compiled:part:31"
+    ],
+    "sGaussJawRight2": [
+      "src/boss_parts.inc:37",
+      "compiled:part:32"
+    ],
+    "sSquidJawLeft": [
+      "src/boss_parts.inc:38",
+      "compiled:part:33"
+    ],
+    "sSquidJawRight": [
+      "src/boss_parts.inc:39",
+      "compiled:part:34"
+    ],
+    "sSquidTent": [
+      "src/boss_parts.inc:40",
+      "src/boss_parts.inc:41",
+      "compiled:part:35",
+      "compiled:part:36"
+    ],
+    "sEclipseChasis": [
+      "src/boss_parts.inc:42",
+      "compiled:part:37"
+    ],
+    "sEclipsePanel": [
+      "src/boss_parts.inc:43",
+      "compiled:part:38"
+    ],
+    "sEclipseShield": [
+      "src/boss_parts.inc:44",
+      "compiled:part:39"
+    ],
+    "sCrucibleCornerCool": [
+      "src/boss_parts.inc:45",
+      "compiled:part:40"
+    ],
+    "sCrucibleEdgeCool": [
+      "src/boss_parts.inc:46",
+      "compiled:part:41"
+    ],
+    "sHexDefaultBody": [
+      "src/render.cpp:22"
+    ],
+    "sHexAssault": [
+      "src/render.cpp:22"
+    ],
+    "sHexHullbreaker": [
+      "src/render.cpp:22"
+    ],
+    "sHexStealth": [
+      "src/render.cpp:22"
+    ],
+    "sHexFirefly": [
+      "src/render.cpp:22"
+    ],
+    "sHexSentinel": [
+      "src/render.cpp:22"
+    ],
+    "sHexEngineer": [
+      "src/render.cpp:22"
+    ],
+    "sHexResearch": [
+      "src/render.cpp:22"
+    ],
+    "sHexBattery": [
+      "src/render.cpp:22"
+    ],
+    "sHexArchitect": [
+      "src/render.cpp:22"
+    ],
+    "sHexViper": [
+      "src/render.cpp:22"
+    ],
+    "sHexCarrier": [
+      "src/render.cpp:22"
+    ],
+    "sHexCourser": [
+      "src/render.cpp:22"
+    ],
+    "sHexLeviathan": [
+      "src/render.cpp:22"
+    ],
+    "sAsteroidSmall1": [
+      "src/render.cpp:26"
+    ],
+    "sAsteroidSmall2": [
+      "src/render.cpp:26"
+    ],
+    "sAsteroidSmall3": [
+      "src/render.cpp:26"
+    ],
+    "sAsteroidSmall4": [
+      "src/render.cpp:26"
+    ],
+    "sAsteroidMedium1": [
+      "src/render.cpp:27",
+      "src/content.cpp:235"
+    ],
+    "sAsteroidMedium2": [
+      "src/render.cpp:27"
+    ],
+    "sAsteroidMedium3": [
+      "src/render.cpp:27"
+    ],
+    "sAsteroidMedium4": [
+      "src/render.cpp:27"
+    ],
+    "sAsteroidLarge": [
+      "src/render.cpp:28"
+    ],
+    "sAsteroidLarge2": [
+      "src/render.cpp:28"
+    ],
+    "sAsteroidLarge3": [
+      "src/render.cpp:28"
+    ],
+    "sAsteroidLarge4": [
+      "src/render.cpp:28"
+    ],
+    "sAsteroidMega": [
+      "src/render.cpp:29",
+      "src/render.cpp:29",
+      "src/render.cpp:29",
+      "src/render.cpp:29"
+    ],
+    "sDefaultWeapon": [
+      "src/render.cpp:48"
+    ],
+    "sBulletBlue": [
+      "src/render.cpp:48",
+      "src/render.cpp:50",
+      "src/render.cpp:50"
+    ],
+    "sFlakBlue": [
+      "src/render.cpp:48"
+    ],
+    "sRailgunBlue": [
+      "src/render.cpp:48"
+    ],
+    "sGrenade": [
+      "src/render.cpp:49"
+    ],
+    "sSalvoBlue": [
+      "src/render.cpp:49"
+    ],
+    "sVortexCoreBlue": [
+      "src/render.cpp:49"
+    ],
+    "sTorrentBlue": [
+      "src/render.cpp:49"
+    ],
+    "sDartBlue": [
+      "src/render.cpp:49"
+    ],
+    "sBulletRed": [
+      "src/render.cpp:50"
+    ],
+    "sRailShardBlue": [
+      "src/render.cpp:50"
+    ],
+    "sBlade": [
+      "src/render.cpp:50",
+      "src/render.cpp:78"
+    ],
+    "sOrbSeraph": [
+      "src/render.cpp:50"
+    ],
+    "sSeraphShot": [
+      "src/render.cpp:50",
+      "src/render.cpp:57"
+    ],
+    "sCastHardShieldInner": [
+      "src/render.cpp:51"
+    ],
+    "sPlasmaShot": [
+      "src/render.cpp:51"
+    ],
+    "sPulseShotgun": [
+      "src/render.cpp:51",
+      "src/render.cpp:54"
+    ],
+    "sSineShot": [
+      "src/render.cpp:51"
+    ],
+    "sSineShotLarge": [
+      "src/render.cpp:51"
+    ],
+    "sRazerShot": [
+      "src/render.cpp:52",
+      "src/render.cpp:52"
+    ],
+    "sGaussProjectile": [
+      "src/render.cpp:52"
+    ],
+    "sTracerShot": [
+      "src/render.cpp:52"
+    ],
+    "sTracerBall": [
+      "src/render.cpp:52"
+    ],
+    "sDeadlyWakeEnemyRed": [
+      "src/render.cpp:52"
+    ],
+    "sOrbJuggernaut": [
+      "src/render.cpp:53"
+    ],
+    "sJuggMissile": [
+      "src/render.cpp:53",
+      "src/content.cpp:297"
+    ],
+    "sDwellerGuardShot": [
+      "src/render.cpp:53"
+    ],
+    "sDwellerChitinMissile": [
+      "src/render.cpp:53",
+      "src/content.cpp:296"
+    ],
+    "sDwellerWarriorArc": [
+      "src/render.cpp:53"
+    ],
+    "sInterceptorMissile": [
+      "src/render.cpp:54"
+    ],
+    "sStationDroneShot": [
+      "src/render.cpp:54"
+    ],
+    "sWardenVortex": [
+      "src/render.cpp:54"
+    ],
+    "sJuggernautShot": [
+      "src/render.cpp:55"
+    ],
+    "sJuggMissileHoming": [
+      "src/render.cpp:55",
+      "src/content.cpp:298"
+    ],
+    "sPulseShotgunHot": [
+      "src/render.cpp:55",
+      "src/render.cpp:55"
+    ],
+    "sMineDroneShot": [
+      "src/render.cpp:55"
+    ],
+    "sSnakeSpine": [
+      "src/render.cpp:55"
+    ],
+    "sChainBody": [
+      "src/render.cpp:55"
+    ],
+    "sPulsarMine": [
+      "src/render.cpp:55",
+      "src/content.cpp:266"
+    ],
+    "sEclipseShot": [
+      "src/render.cpp:55",
+      "src/render.cpp:55",
+      "src/render.cpp:56",
+      "src/render.cpp:56",
+      "src/render.cpp:58"
+    ],
+    "sSpike": [
+      "src/render.cpp:55",
+      "src/render.cpp:55"
+    ],
+    "sTripleSpike": [
+      "src/render.cpp:55"
+    ],
+    "sEclipseLanceReflect": [
+      "src/render.cpp:55",
+      "src/render.cpp:58"
+    ],
+    "sCelestialStrike": [
+      "src/render.cpp:55"
+    ],
+    "sCelestialStrike2": [
+      "src/render.cpp:55"
+    ],
+    "sCelestialBurstWarning": [
+      "src/render.cpp:55"
+    ],
+    "sLanceRed": [
+      "src/render.cpp:56",
+      "src/render.cpp:555"
+    ],
+    "sEclipseCharge": [
+      "src/render.cpp:56",
+      "src/render.cpp:72"
+    ],
+    "sEclipseVortex": [
+      "src/render.cpp:56"
+    ],
+    "sEnemyDroneShot": [
+      "src/render.cpp:57"
+    ],
+    "sMyrmidonBomb": [
+      "src/render.cpp:57"
+    ],
+    "sWarningCirclePink": [
+      "src/render.cpp:57",
+      "src/render.cpp:57"
+    ],
+    "sMyrmidonAutoGun": [
+      "src/render.cpp:58"
+    ],
+    "sEclipseWave": [
+      "src/render.cpp:58"
+    ],
+    "sCelestialSurgeBlue": [
+      "src/render.cpp:61"
+    ],
+    "sCelestialSurgeGreen": [
+      "src/render.cpp:61"
+    ],
+    "sCelestialSurgePink": [
+      "src/render.cpp:61"
+    ],
+    "sCelestialSurgePurple": [
+      "src/render.cpp:61"
+    ],
+    "sCelestialSurgeRed": [
+      "src/render.cpp:61"
+    ],
+    "sCelestialSurgeWhite": [
+      "src/render.cpp:61"
+    ],
+    "sCelestialSurgeYellow": [
+      "src/render.cpp:61"
+    ],
+    "sCherubShield": [
+      "src/render.cpp:63"
+    ],
+    "sMaelstromLarge": [
+      "src/render.cpp:64"
+    ],
+    "sMaelstromSmall": [
+      "src/render.cpp:64"
+    ],
+    "sWaveBlue": [
+      "src/render.cpp:66",
+      "src/render.cpp:66"
+    ],
+    "sWaveYellow": [
+      "src/render.cpp:66",
+      "src/render.cpp:66"
+    ],
+    "sWaveGreen": [
+      "src/render.cpp:66",
+      "src/render.cpp:66"
+    ],
+    "sWavePurple": [
+      "src/render.cpp:66"
+    ],
+    "sWaveRed": [
+      "src/render.cpp:66",
+      "src/render.cpp:66"
+    ],
+    "sWavePink": [
+      "src/render.cpp:66"
+    ],
+    "sBastionWave": [
+      "src/render.cpp:68"
+    ],
+    "sThermalLancePurple": [
+      "src/render.cpp:69"
+    ],
+    "sThermalLanceGreen": [
+      "src/render.cpp:69"
+    ],
+    "sThermalLanceChargePurple": [
+      "src/render.cpp:70"
+    ],
+    "sThermalLanceChargeGreen": [
+      "src/render.cpp:70"
+    ],
+    "sBeamOverseer": [
+      "src/render.cpp:70"
+    ],
+    "sExplosionYellow": [
+      "src/render.cpp:71",
+      "src/render.cpp:73",
+      "src/render.cpp:73",
+      "src/render.cpp:506"
+    ],
+    "sEclipseBurstReflect": [
+      "src/render.cpp:72"
+    ],
+    "sExplosionBlue": [
+      "src/render.cpp:73",
+      "src/render.cpp:73"
+    ],
+    "sExplosionGreen": [
+      "src/render.cpp:73",
+      "src/render.cpp:73"
+    ],
+    "sExplosionPurple": [
+      "src/render.cpp:73"
+    ],
+    "sExplosionRed": [
+      "src/render.cpp:73",
+      "src/render.cpp:73"
+    ],
+    "sExplosionPink": [
+      "src/render.cpp:73"
+    ],
+    "sTempestShield": [
+      "src/render.cpp:75",
+      "src/render.cpp:75"
+    ],
+    "sTempestHalo": [
+      "src/render.cpp:75",
+      "src/render.cpp:75"
+    ],
+    "sTempestReflect": [
+      "src/render.cpp:75",
+      "src/render.cpp:75"
+    ],
+    "sTempestTemporal": [
+      "src/render.cpp:75"
+    ],
+    "sTempestAmp": [
+      "src/render.cpp:75",
+      "src/render.cpp:75"
+    ],
+    "sTempestWarp": [
+      "src/render.cpp:75"
+    ],
+    "sConstructDrone": [
+      "src/render.cpp:77"
+    ],
+    "sConstructDroneDefense": [
+      "src/render.cpp:77"
+    ],
+    "sMine": [
+      "src/render.cpp:77"
+    ],
+    "sTurret": [
+      "src/render.cpp:78"
+    ],
+    "sConstructAlly": [
+      "src/render.cpp:78"
+    ],
+    "sConstructAllyInterceptorArmored": [
+      "src/render.cpp:78"
+    ],
+    "sConstructAllyGuardianArmored": [
+      "src/render.cpp:78"
+    ],
+    "sCarrierDrone": [
+      "src/render.cpp:78"
+    ],
+    "sSwords": [
+      "src/render.cpp:78"
+    ],
+    "sBastion2": [
+      "src/render.cpp:78"
+    ],
+    "s_power_white": [
+      "src/render.cpp:80"
+    ],
+    "s_power_mega": [
+      "src/render.cpp:80",
+      "src/render.cpp:82"
+    ],
+    "s_power_gold": [
+      "src/render.cpp:80",
+      "src/render.cpp:80"
+    ],
+    "sArmorFragment": [
+      "src/render.cpp:82"
+    ],
+    "sMediCharge": [
+      "src/render.cpp:82"
+    ],
+    "sNovaDriftLogo": [
+      "src/render.cpp:83"
+    ],
+    "sMenuPlanet": [
+      "src/render.cpp:84",
+      "src/render.cpp:155"
+    ],
+    "sMenuNebula": [
+      "src/render.cpp:85",
+      "src/render.cpp:153"
+    ],
+    "sMenuPlanetRings": [
+      "src/render.cpp:86",
+      "src/render.cpp:156"
+    ],
+    "sMenuMoon": [
+      "src/render.cpp:86",
+      "src/render.cpp:157"
+    ],
+    "sMenuCursor": [
+      "src/render.cpp:87",
+      "src/app.cpp:666"
+    ],
+    "sCursorSmall": [
+      "src/render.cpp:87",
+      "src/render.cpp:714"
+    ],
+    "sComet": [
+      "src/render.cpp:88"
+    ],
+    "sTrainEngine": [
+      "src/render.cpp:88"
+    ],
+    "sTrainCar": [
+      "src/render.cpp:88"
+    ],
+    "sBlackHole": [
+      "src/render.cpp:88"
+    ],
+    "sWarningComet": [
+      "src/render.cpp:90"
+    ],
+    "sprCosmicEgg1": [
+      "src/render.cpp:90"
+    ],
+    "sMenuStar": [
+      "src/render.cpp:158"
+    ],
+    "sSelectaWhite": [
+      "src/render.cpp:196"
+    ],
+    "sSelecta": [
+      "src/render.cpp:196"
+    ],
+    "sSwordsAntimatter": [
+      "src/render.cpp:317"
+    ],
+    "sBastionGlow": [
+      "src/render.cpp:330"
+    ],
+    "sBeamGlowRed": [
+      "src/render.cpp:535"
+    ],
+    "sExpBar": [
+      "src/render.cpp:625"
+    ],
+    "sModeDangerZone": [
+      "src/app.cpp:81"
+    ],
+    "sModeEnemyTerritory": [
+      "src/app.cpp:82"
+    ],
+    "sModeEliteEnemy": [
+      "src/app.cpp:83"
+    ],
+    "sModeHostileUniverse": [
+      "src/app.cpp:84"
+    ],
+    "sModeNemesis": [
+      "src/app.cpp:85"
+    ],
+    "sModeMayhem": [
+      "src/app.cpp:86"
+    ],
+    "sModeAnnihilation": [
+      "src/app.cpp:87"
+    ],
+    "sModeEndless": [
+      "src/app.cpp:88"
+    ],
+    "sModeWildMetamorphosis": [
+      "src/app.cpp:89"
+    ],
+    "sModeDraft": [
+      "src/app.cpp:90"
+    ],
+    "sModePractice": [
+      "src/app.cpp:91"
+    ],
+    "sModeDailyChallenge": [
+      "src/app.cpp:92"
+    ],
+    "sDivider": [
+      "src/app.cpp:660"
+    ],
+    "sBarFlashBlue": [
+      "src/app.cpp:692",
+      "src/app.cpp:723"
+    ],
+    "sGUIGradientBlue": [
+      "src/app.cpp:692"
+    ],
+    "sStart": [
+      "src/app.cpp:703",
+      "src/app.cpp:1094"
+    ],
+    "sChallengeModeSelecta": [
+      "src/app.cpp:708"
+    ],
+    "sModeLockedFrame": [
+      "src/app.cpp:948"
+    ],
+    "sHexLockedFrame": [
+      "src/app.cpp:948",
+      "src/content.cpp:338",
+      "compiled:mod:168",
+      "compiled:mod:169"
+    ],
+    "sHexDefaultWeapon": [
+      "src/content.cpp:4"
+    ],
+    "sHexSplit": [
+      "src/content.cpp:5"
+    ],
+    "sHexFlak": [
+      "src/content.cpp:6"
+    ],
+    "sHexRailgun": [
+      "src/content.cpp:7"
+    ],
+    "sHexGrenade": [
+      "src/content.cpp:8"
+    ],
+    "sHexSalvo": [
+      "src/content.cpp:9"
+    ],
+    "sHexVortex": [
+      "src/content.cpp:10"
+    ],
+    "sHexPulse": [
+      "src/content.cpp:11"
+    ],
+    "sHexTorrent": [
+      "src/content.cpp:12"
+    ],
+    "sHexBladeDrone": [
+      "src/content.cpp:13"
+    ],
+    "sHexDart": [
+      "src/content.cpp:14"
+    ],
+    "sHexThermalLance": [
+      "src/content.cpp:15"
+    ],
+    "sHexSwords": [
+      "src/content.cpp:16"
+    ],
+    "sPlayer": [
+      "src/content.cpp:19"
+    ],
+    "sPlayerAssault": [
+      "src/content.cpp:20"
+    ],
+    "sPlayerBreaker": [
+      "src/content.cpp:21"
+    ],
+    "sPlayerStealth": [
+      "src/content.cpp:22"
+    ],
+    "sPlayerFirefly": [
+      "src/content.cpp:23"
+    ],
+    "sPlayerSentinel": [
+      "src/content.cpp:24"
+    ],
+    "sPlayerEngineer": [
+      "src/content.cpp:25"
+    ],
+    "sPlayerResearch": [
+      "src/content.cpp:26"
+    ],
+    "sPlayerBattery": [
+      "src/content.cpp:27"
+    ],
+    "sPlayerArchitect": [
+      "src/content.cpp:28"
+    ],
+    "sPlayerViper": [
+      "src/content.cpp:29"
+    ],
+    "sPlayerCarrier": [
+      "src/content.cpp:30"
+    ],
+    "sPlayerCourser": [
+      "src/content.cpp:31"
+    ],
+    "sPlayerLeviathan": [
+      "src/content.cpp:32"
+    ],
+    "sHexDefaultShield": [
+      "src/content.cpp:35"
+    ],
+    "sHexHalo": [
+      "src/content.cpp:36"
+    ],
+    "sHexReflect": [
+      "src/content.cpp:37"
+    ],
+    "sHexBastion": [
+      "src/content.cpp:38"
+    ],
+    "sHexTemporal": [
+      "src/content.cpp:39"
+    ],
+    "sHexAmp": [
+      "src/content.cpp:40"
+    ],
+    "sHexWarp": [
+      "src/content.cpp:41"
+    ],
+    "sHexHelix": [
+      "src/content.cpp:42"
+    ],
+    "sHexSiphon": [
+      "src/content.cpp:43"
+    ],
+    "sHexShockwave": [
+      "src/content.cpp:44"
+    ],
+    "sSwarmling": [
+      "src/content.cpp:236"
+    ],
+    "sStationDrone": [
+      "src/content.cpp:237"
+    ],
+    "sVanguard": [
+      "src/content.cpp:238"
+    ],
+    "sSpitfire": [
+      "src/content.cpp:239"
+    ],
+    "sInterceptor": [
+      "src/content.cpp:240"
+    ],
+    "sHammerhead": [
+      "src/content.cpp:242"
+    ],
+    "sSine": [
+      "src/content.cpp:243"
+    ],
+    "sPulsebug": [
+      "src/content.cpp:244"
+    ],
+    "sWarden": [
+      "src/content.cpp:245"
+    ],
+    "sBeamcaster": [
+      "src/content.cpp:246"
+    ],
+    "sCherub": [
+      "src/content.cpp:247"
+    ],
+    "sJuggernaut": [
+      "src/content.cpp:248",
+      "src/composites.cpp:292"
+    ],
+    "sMineLayer": [
+      "src/content.cpp:249"
+    ],
+    "sTracer": [
+      "src/content.cpp:250"
+    ],
+    "sScion": [
+      "src/content.cpp:251"
+    ],
+    "sDreadnoughtCenter": [
+      "src/content.cpp:252",
+      "src/composites.cpp:13",
+      "src/composites.cpp:304"
+    ],
+    "sSeraph": [
+      "src/content.cpp:255"
+    ],
+    "sDweller": [
+      "src/content.cpp:257"
+    ],
+    "sCeratotitan": [
+      "src/content.cpp:258",
+      "src/composites.cpp:306"
+    ],
+    "sGlaucusHead": [
+      "src/content.cpp:259",
+      "src/composites.cpp:307"
+    ],
+    "sCrucible": [
+      "src/content.cpp:260",
+      "src/content.cpp:291",
+      "src/composites.cpp:308"
+    ],
+    "sHost": [
+      "src/content.cpp:261"
+    ],
+    "sHive": [
+      "src/content.cpp:262"
+    ],
+    "sHiveDrone": [
+      "src/content.cpp:263"
+    ],
+    "sMyrmidon": [
+      "src/content.cpp:264"
+    ],
+    "sPulsar": [
+      "src/content.cpp:265"
+    ],
+    "sSquidHead": [
+      "src/content.cpp:267",
+      "src/composites_snapper.inc:7"
+    ],
+    "sCelestial": [
+      "src/content.cpp:268"
+    ],
+    "sCelestialDrone": [
+      "src/content.cpp:269"
+    ],
+    "sEclipseCore": [
+      "src/content.cpp:270",
+      "src/composites.cpp:287"
+    ],
+    "sOverseer": [
+      "src/content.cpp:271"
+    ],
+    "sOverseerDrone": [
+      "src/content.cpp:272"
+    ],
+    "sMinelayerMine": [
+      "src/content.cpp:273"
+    ],
+    "sSpikeball": [
+      "src/content.cpp:274"
+    ],
+    "sDwellerDrone": [
+      "src/content.cpp:276"
+    ],
+    "sDwellerGuard": [
+      "src/content.cpp:277",
+      "src/content.cpp:278"
+    ],
+    "sDwellerWarrior": [
+      "src/content.cpp:279"
+    ],
+    "sGemini": [
+      "src/content.cpp:280"
+    ],
+    "sGauss": [
+      "src/content.cpp:281",
+      "src/composites.cpp:301"
+    ],
+    "sCrabNest": [
+      "src/content.cpp:282"
+    ],
+    "sHostDrone": [
+      "src/content.cpp:283"
+    ],
+    "sHostDrone2": [
+      "src/content.cpp:284"
+    ],
+    "sHostDrone3": [
+      "src/content.cpp:285"
+    ],
+    "sHiveDroneHot": [
+      "src/content.cpp:286"
+    ],
+    "sOverseerTurret": [
+      "src/content.cpp:287"
+    ],
+    "sCeratotitanSwarm": [
+      "src/content.cpp:288"
+    ],
+    "sSeraphDrone": [
+      "src/content.cpp:289",
+      "src/content.cpp:290"
+    ],
+    "sMineSingularity": [
+      "src/content.cpp:292"
+    ],
+    "sMinelayerDrone": [
+      "src/content.cpp:293"
+    ],
+    "sInterceptorMine": [
+      "src/content.cpp:294"
+    ],
+    "sMineShield": [
+      "src/content.cpp:295"
+    ],
+    "sOverseerMissile": [
+      "src/content.cpp:299"
+    ],
+    "sHexSplinterShot": [
+      "src/content.cpp:324",
+      "compiled:mod:19"
+    ],
+    "sHexTargettingSystems": [
+      "src/content.cpp:325",
+      "compiled:mod:20"
+    ],
+    "sHexHeatSeeking": [
+      "src/content.cpp:326",
+      "compiled:mod:21"
+    ],
+    "sHexShieldRadius": [
+      "src/content.cpp:327",
+      "compiled:mod:36"
+    ],
+    "sHexGraceProtocol": [
+      "src/content.cpp:328",
+      "compiled:mod:53"
+    ],
+    "sHexDefenseDrone": [
+      "src/content.cpp:329",
+      "compiled:mod:56"
+    ],
+    "sHexSubsumption": [
+      "src/content.cpp:330",
+      "compiled:mod:87"
+    ],
+    "sHexTerminalDirective": [
+      "src/content.cpp:331",
+      "compiled:mod:92"
+    ],
+    "sHexFleetCommander": [
+      "src/content.cpp:332",
+      "compiled:mod:93"
+    ],
+    "sHexArcBarrier": [
+      "src/content.cpp:333",
+      "compiled:mod:94"
+    ],
+    "sHexReconstitution": [
+      "src/content.cpp:334",
+      "compiled:mod:96"
+    ],
+    "sHexVoid": [
+      "src/content.cpp:335",
+      "compiled:mod:105"
+    ],
+    "sHexRetaliationShields": [
+      "src/content.cpp:336",
+      "compiled:mod:107"
+    ],
+    "sHexVoidSlice": [
+      "src/content.cpp:337",
+      "compiled:mod:133"
+    ],
+    "sDreadnoughtThrust": [
+      "src/composites.cpp:14"
+    ],
+    "sWarbringerChasisGlow": [
+      "src/composites.cpp:15",
+      "src/composites.cpp:248"
+    ],
+    "sWarbringerCore": [
+      "src/composites.cpp:15",
+      "src/composites.cpp:305"
+    ],
+    "sWarbringerCoreGlow": [
+      "src/composites.cpp:16",
+      "src/composites.cpp:305"
+    ],
+    "sWarbringerWingGlow": [
+      "src/composites.cpp:16",
+      "src/composites.cpp:249"
+    ],
+    "sWarbringerThrusterGlow": [
+      "src/composites.cpp:17",
+      "src/composites.cpp:250"
+    ],
+    "sBulwarkBodyGlow": [
+      "src/composites.cpp:18",
+      "src/composites.cpp:256"
+    ],
+    "sBulwarkArmGlow": [
+      "src/composites.cpp:18",
+      "src/composites.cpp:259"
+    ],
+    "sBulwarkTailGlow": [
+      "src/composites.cpp:19",
+      "src/composites.cpp:260"
+    ],
+    "sStarEaterLeg": [
+      "src/composites.cpp:20",
+      "src/composites.cpp:273"
+    ],
+    "sStarEaterLegLarge": [
+      "src/composites.cpp:20",
+      "src/composites.cpp:273"
+    ],
+    "sStarEaterAura": [
+      "src/composites.cpp:21"
+    ],
+    "sGlaucusFin": [
+      "src/composites.cpp:228"
+    ],
+    "sGlaucusFinger": [
+      "src/composites.cpp:235"
+    ],
+    "sBulwarkBarrierWhiteHot": [
+      "src/composites.cpp:242"
+    ],
+    "sBulwarkBarrierHot": [
+      "src/composites.cpp:242"
+    ],
+    "sBulwarkBarrierWarm": [
+      "src/composites.cpp:242"
+    ],
+    "sCrucibleCornerHot": [
+      "src/composites.cpp:243"
+    ],
+    "sCrucibleEdgeHot": [
+      "src/composites.cpp:244"
+    ],
+    "sWarbringerBroadsideGlow": [
+      "src/composites.cpp:251"
+    ],
+    "sWarbringerLaserGlow": [
+      "src/composites.cpp:252"
+    ],
+    "sStationGlow": [
+      "src/composites.cpp:253"
+    ],
+    "sEclipseChassisGlow": [
+      "src/composites.cpp:254"
+    ],
+    "sEclipsePanelGlow": [
+      "src/composites.cpp:255"
+    ],
+    "sBulwarkBody2Glow": [
+      "src/composites.cpp:257"
+    ],
+    "sBulwarkBody3Glow": [
+      "src/composites.cpp:258"
+    ],
+    "sBulwarkThrusterGlow": [
+      "src/composites.cpp:261"
+    ],
+    "sBulwarkThrusterLargeGlow": [
+      "src/composites.cpp:262"
+    ],
+    "sJuggernautGun": [
+      "src/composites.cpp:293"
+    ],
+    "sCrucibleSigil": [
+      "src/composites.cpp:308"
+    ],
+    "sAchiSpeedlineStar2": [
+      "src/app_ending.inc:62"
+    ],
+    "sAchiThruster": [
+      "src/app_ending.inc:74"
+    ],
+    "sAchiEndingGlow": [
+      "src/app_ending.inc:79"
+    ],
+    "sAchiEndingStar2": [
+      "src/app_ending.inc:84",
+      "src/app_ending.inc:86"
+    ],
+    "sprite_hexagon3": [
+      "src/app_ending.inc:90"
+    ],
+    "sprite_hexagon1": [
+      "src/app_ending.inc:90"
+    ],
+    "sprite_hexagon2": [
+      "src/app_ending.inc:90"
+    ],
+    "sprite_dotted_lines_1": [
+      "src/app_ending.inc:90"
+    ],
+    "sprite_dotted_lines_2": [
+      "src/app_ending.inc:90"
+    ],
+    "sprite_simple_lines": [
+      "src/app_ending.inc:90"
+    ],
+    "sprite_hexagon_rot1": [
+      "src/app_ending.inc:100"
+    ],
+    "sprite_triangles_1": [
+      "src/app_ending.inc:102"
+    ],
+    "sprite_triangles_2": [
+      "src/app_ending.inc:102"
+    ],
+    "sGlowWhite": [
+      "src/composites_snapper.inc:6"
+    ],
+    "sHexAddedProjectiles": [
+      "compiled:mod:0"
+    ],
+    "sHexFocusFire": [
+      "compiled:mod:1"
+    ],
+    "sHexFiringArray": [
+      "compiled:mod:2"
+    ],
+    "sHexFusillade": [
+      "compiled:mod:3"
+    ],
+    "sHexBlastRadius": [
+      "compiled:mod:4"
+    ],
+    "sHexHighExplosive": [
+      "compiled:mod:5"
+    ],
+    "sHexConcentratedBlast": [
+      "compiled:mod:6"
+    ],
+    "sHexRupture": [
+      "compiled:mod:7"
+    ],
+    "sHexVelocity": [
+      "compiled:mod:8"
+    ],
+    "sHexSnipe": [
+      "compiled:mod:9"
+    ],
+    "sHexCalibrate": [
+      "compiled:mod:10"
+    ],
+    "sHexBreach": [
+      "compiled:mod:11"
+    ],
+    "sHexRapidFire": [
+      "compiled:mod:12"
+    ],
+    "sHexBurstFire": [
+      "compiled:mod:13"
+    ],
+    "sHexWarpath": [
+      "compiled:mod:14"
+    ],
+    "sHexSiegeWeaponry": [
+      "compiled:mod:15"
+    ],
+    "sHexMagnitude": [
+      "compiled:mod:16"
+    ],
+    "sHexPayload": [
+      "compiled:mod:17"
+    ],
+    "sHexChargedShot": [
+      "compiled:mod:18"
+    ],
+    "sHexHomingStrike": [
+      "compiled:mod:22"
+    ],
+    "sHexConvergence": [
+      "compiled:mod:23"
+    ],
+    "sHexHullStrength": [
+      "compiled:mod:24"
+    ],
+    "sHexAbsorption": [
+      "compiled:mod:25"
+    ],
+    "sHexForceArmor": [
+      "compiled:mod:26"
+    ],
+    "sHexJuggernaut": [
+      "compiled:mod:27"
+    ],
+    "sHexHullRegeneration": [
+      "compiled:mod:28"
+    ],
+    "sHexRapidReconstruction": [
+      "compiled:mod:29"
+    ],
+    "sHexAdrenalModule": [
+      "compiled:mod:30"
+    ],
+    "sHexEssenceSap": [
+      "compiled:mod:31"
+    ],
+    "sHexShieldDurability": [
+      "compiled:mod:32"
+    ],
+    "sHexShieldCooldown": [
+      "compiled:mod:33"
+    ],
+    "sHexBarrier": [
+      "compiled:mod:34"
+    ],
+    "sHexOmniShield": [
+      "compiled:mod:35"
+    ],
+    "sHexFocusedShields": [
+      "compiled:mod:37"
+    ],
+    "sHexRadiantShields": [
+      "compiled:mod:38"
+    ],
+    "sHexWeaponizedShields": [
+      "compiled:mod:39"
+    ],
+    "sHexVolatileShields": [
+      "compiled:mod:40"
+    ],
+    "sHexDischarge": [
+      "compiled:mod:41"
+    ],
+    "sHexRegenerativeShields": [
+      "compiled:mod:42"
+    ],
+    "sHexEmergencySystems": [
+      "compiled:mod:43"
+    ],
+    "sHexImprovedThrusters": [
+      "compiled:mod:44"
+    ],
+    "sHexStreamline": [
+      "compiled:mod:45"
+    ],
+    "sHexDeadlyWake": [
+      "compiled:mod:46"
+    ],
+    "sHexKineticBoost": [
+      "compiled:mod:47"
+    ],
+    "sHexStabilization": [
+      "compiled:mod:48"
+    ],
+    "sHexAgility": [
+      "compiled:mod:49"
+    ],
+    "sHexPowerReserves": [
+      "compiled:mod:50"
+    ],
+    "sHexBlink": [
+      "compiled:mod:51"
+    ],
+    "sHexDrones": [
+      "compiled:mod:52"
+    ],
+    "sHexAdvancedEngineering": [
+      "compiled:mod:54"
+    ],
+    "sHexAssaultDrones": [
+      "compiled:mod:55"
+    ],
+    "sHexMines": [
+      "compiled:mod:57"
+    ],
+    "sHexAutoMines": [
+      "compiled:mod:58"
+    ],
+    "sHexLoadedMines": [
+      "compiled:mod:59"
+    ],
+    "sHexTurret": [
+      "compiled:mod:60"
+    ],
+    "sHexPointDefense": [
+      "compiled:mod:61"
+    ],
+    "sHexWarMachine": [
+      "compiled:mod:62"
+    ],
+    "sHexCounterArtillery": [
+      "compiled:mod:63"
+    ],
+    "sHexAlly": [
+      "compiled:mod:64"
+    ],
+    "sHexIntegratedWeaponry": [
+      "compiled:mod:65"
+    ],
+    "sHexGuardian": [
+      "compiled:mod:66"
+    ],
+    "sHexWingman": [
+      "compiled:mod:67"
+    ],
+    "sHexElegantConstruction": [
+      "compiled:mod:68"
+    ],
+    "sHexSelfDestruction": [
+      "compiled:mod:69"
+    ],
+    "sHexOverseer": [
+      "compiled:mod:70"
+    ],
+    "sHexOverclock": [
+      "compiled:mod:71"
+    ],
+    "sHexCandescence": [
+      "compiled:mod:72"
+    ],
+    "sHexCorrosion": [
+      "compiled:mod:73"
+    ],
+    "sHexPurge": [
+      "compiled:mod:74"
+    ],
+    "sHexPurification": [
+      "compiled:mod:75"
+    ],
+    "sHexSkirmish": [
+      "compiled:mod:76"
+    ],
+    "sHexTerminate": [
+      "compiled:mod:77"
+    ],
+    "sHexBlitz": [
+      "compiled:mod:78"
+    ],
+    "sHexEfficiency": [
+      "compiled:mod:79"
+    ],
+    "sHexCoreShielding": [
+      "compiled:mod:80"
+    ],
+    "sHexAdaptiveArmor": [
+      "compiled:mod:81"
+    ],
+    "sHexChanneling": [
+      "compiled:mod:82"
+    ],
+    "sHexAegis": [
+      "compiled:mod:83"
+    ],
+    "sHexRetribution": [
+      "compiled:mod:84"
+    ],
+    "sHexLance": [
+      "compiled:mod:85"
+    ],
+    "sHexGemini": [
+      "compiled:mod:86"
+    ],
+    "sHexNanotech": [
+      "compiled:mod:88"
+    ],
+    "sHexEvolution": [
+      "compiled:mod:89"
+    ],
+    "sHexEchoStrike": [
+      "compiled:mod:90"
+    ],
+    "sHexBattalionDrones": [
+      "compiled:mod:91"
+    ],
+    "sHexCounterpulse": [
+      "compiled:mod:95"
+    ],
+    "sHexNanotechDissemination": [
+      "compiled:mod:97"
+    ],
+    "sHexDecoySignal": [
+      "compiled:mod:98"
+    ],
+    "sHexMediCharge": [
+      "compiled:mod:99"
+    ],
+    "sHexEvasion": [
+      "compiled:mod:100"
+    ],
+    "sHexOutmaneuver": [
+      "compiled:mod:101"
+    ],
+    "sHexOverpower": [
+      "compiled:mod:102"
+    ],
+    "sHexShieldedDrones": [
+      "compiled:mod:103"
+    ],
+    "sHexRebuke": [
+      "compiled:mod:104"
+    ],
+    "sHexFlashShielding": [
+      "compiled:mod:106"
+    ],
+    "sHexStrafe": [
+      "compiled:mod:108"
+    ],
+    "sHexPriorityZero": [
+      "compiled:mod:109"
+    ],
+    "sHexTacticalLink": [
+      "compiled:mod:110"
+    ],
+    "sHexSupportSpecialist": [
+      "compiled:mod:111"
+    ],
+    "sHexRegression": [
+      "compiled:mod:112"
+    ],
+    "sHexConversion": [
+      "compiled:mod:113"
+    ],
+    "sHexHiddenPower": [
+      "compiled:mod:114"
+    ],
+    "sHexLastStand": [
+      "compiled:mod:115"
+    ],
+    "sHexMastery": [
+      "compiled:mod:116"
+    ],
+    "sHexApotheosis": [
+      "compiled:mod:117"
+    ],
+    "sHexTempestBreak": [
+      "compiled:mod:118"
+    ],
+    "sHexSanctuary": [
+      "compiled:mod:119"
+    ],
+    "sHexSaturationFire": [
+      "compiled:mod:120"
+    ],
+    "sHexApexMachinery": [
+      "compiled:mod:121"
+    ],
+    "sHexLeafOnTheWind": [
+      "compiled:mod:122"
+    ],
+    "sHexCelestialSurge": [
+      "compiled:mod:123"
+    ],
+    "sHexVitalBond": [
+      "compiled:mod:124"
+    ],
+    "sHexAnnihilation": [
+      "compiled:mod:125"
+    ],
+    "sHexAtaraxia": [
+      "compiled:mod:126"
+    ],
+    "sHexDyingStar": [
+      "compiled:mod:127"
+    ],
+    "sHexWarpStrike": [
+      "compiled:mod:128"
+    ],
+    "sHexRancor": [
+      "compiled:mod:129"
+    ],
+    "sHexBarrage": [
+      "compiled:mod:130"
+    ],
+    "sHexSingularStrikeNew": [
+      "compiled:mod:131"
+    ],
+    "sHexBurnoutReactors": [
+      "compiled:mod:132"
+    ],
+    "sHexChargedMines": [
+      "compiled:mod:134"
+    ],
+    "sHexMortar": [
+      "compiled:mod:135"
+    ],
+    "sHexDeflagration": [
+      "compiled:mod:136"
+    ],
+    "sHexChargedShields": [
+      "compiled:mod:137"
+    ],
+    "sHexStrafingStrikes": [
+      "compiled:mod:138"
+    ],
+    "sHexInfuse": [
+      "compiled:mod:139"
+    ],
+    "sHexTacticalBeacon": [
+      "compiled:mod:140"
+    ],
+    "sHexSlipstream": [
+      "compiled:mod:141"
+    ],
+    "sHexDoubleTap": [
+      "compiled:mod:142"
+    ],
+    "sHexHypermetabolism": [
+      "compiled:mod:143"
+    ],
+    "sHexTwinStrike": [
+      "compiled:mod:144"
+    ],
+    "sHexDefiance": [
+      "compiled:mod:145"
+    ],
+    "sHexHeavyCaliber": [
+      "compiled:mod:146"
+    ],
+    "sHexWinnow": [
+      "compiled:mod:147"
+    ],
+    "sHexOutrageModule": [
+      "compiled:mod:148"
+    ],
+    "sHexPolarInversion": [
+      "compiled:mod:149"
+    ],
+    "sHexSolarHeart": [
+      "compiled:mod:150"
+    ],
+    "sHexGalvanicOutburst": [
+      "compiled:mod:151"
+    ],
+    "sHexScorchingWake": [
+      "compiled:mod:152"
+    ],
+    "sHexDeathBlossom": [
+      "compiled:mod:153"
+    ],
+    "sHexRicochet": [
+      "compiled:mod:154"
+    ],
+    "sHexPhantomStrike": [
+      "compiled:mod:155"
+    ],
+    "sHexRevelation": [
+      "compiled:mod:156"
+    ],
+    "sHexEvolutionaryNiche": [
+      "compiled:mod:157"
+    ],
+    "sHexChaoticAmbition": [
+      "compiled:mod:158"
+    ],
+    "sHexPropulsiveMunitions": [
+      "compiled:mod:159"
+    ],
+    "sHexObsession": [
+      "compiled:mod:160"
+    ],
+    "sHexBravado": [
+      "compiled:mod:161"
+    ],
+    "sHexSpecialistMine": [
+      "compiled:mod:162"
+    ],
+    "sHexSpecialistTurret": [
+      "compiled:mod:163"
+    ],
+    "sHexSpecialistDrone": [
+      "compiled:mod:164"
+    ],
+    "sHexSpecialistAlly": [
+      "compiled:mod:165"
+    ],
+    "sHexRampage": [
+      "compiled:mod:166"
+    ],
+    "sHexDiscord": [
+      "compiled:mod:167"
+    ],
+    "sHexTransmogrification": [
+      "compiled:mod:170"
+    ],
+    "sHexEnergizedShields": [
+      "compiled:mod:171"
+    ],
+    "sHexMasochism": [
+      "compiled:mod:172"
+    ],
+    "sHexGrandeur": [
+      "compiled:mod:173"
+    ],
+    "sHexPowerSpike": [
+      "compiled:mod:174"
+    ],
+    "sHexMaelstrom": [
+      "compiled:mod:175"
+    ],
+    "sHexSpontaneousGeneration": [
+      "compiled:mod:176"
+    ],
+    "sHexFarsight": [
+      "compiled:mod:177"
+    ],
+    "sHexExplosiveGrowth": [
+      "compiled:mod:178"
+    ],
+    "sHexChallenger": [
+      "compiled:mod:179"
+    ]
+  },
+  "expanded_entries": [
+    {
+      "entry": "mod:0",
+      "sprite": "sHexAddedProjectiles"
+    },
+    {
+      "entry": "mod:1",
+      "sprite": "sHexFocusFire"
+    },
+    {
+      "entry": "mod:2",
+      "sprite": "sHexFiringArray"
+    },
+    {
+      "entry": "mod:3",
+      "sprite": "sHexFusillade"
+    },
+    {
+      "entry": "mod:4",
+      "sprite": "sHexBlastRadius"
+    },
+    {
+      "entry": "mod:5",
+      "sprite": "sHexHighExplosive"
+    },
+    {
+      "entry": "mod:6",
+      "sprite": "sHexConcentratedBlast"
+    },
+    {
+      "entry": "mod:7",
+      "sprite": "sHexRupture"
+    },
+    {
+      "entry": "mod:8",
+      "sprite": "sHexVelocity"
+    },
+    {
+      "entry": "mod:9",
+      "sprite": "sHexSnipe"
+    },
+    {
+      "entry": "mod:10",
+      "sprite": "sHexCalibrate"
+    },
+    {
+      "entry": "mod:11",
+      "sprite": "sHexBreach"
+    },
+    {
+      "entry": "mod:12",
+      "sprite": "sHexRapidFire"
+    },
+    {
+      "entry": "mod:13",
+      "sprite": "sHexBurstFire"
+    },
+    {
+      "entry": "mod:14",
+      "sprite": "sHexWarpath"
+    },
+    {
+      "entry": "mod:15",
+      "sprite": "sHexSiegeWeaponry"
+    },
+    {
+      "entry": "mod:16",
+      "sprite": "sHexMagnitude"
+    },
+    {
+      "entry": "mod:17",
+      "sprite": "sHexPayload"
+    },
+    {
+      "entry": "mod:18",
+      "sprite": "sHexChargedShot"
+    },
+    {
+      "entry": "mod:19",
+      "sprite": "sHexSplinterShot"
+    },
+    {
+      "entry": "mod:20",
+      "sprite": "sHexTargettingSystems"
+    },
+    {
+      "entry": "mod:21",
+      "sprite": "sHexHeatSeeking"
+    },
+    {
+      "entry": "mod:22",
+      "sprite": "sHexHomingStrike"
+    },
+    {
+      "entry": "mod:23",
+      "sprite": "sHexConvergence"
+    },
+    {
+      "entry": "mod:24",
+      "sprite": "sHexHullStrength"
+    },
+    {
+      "entry": "mod:25",
+      "sprite": "sHexAbsorption"
+    },
+    {
+      "entry": "mod:26",
+      "sprite": "sHexForceArmor"
+    },
+    {
+      "entry": "mod:27",
+      "sprite": "sHexJuggernaut"
+    },
+    {
+      "entry": "mod:28",
+      "sprite": "sHexHullRegeneration"
+    },
+    {
+      "entry": "mod:29",
+      "sprite": "sHexRapidReconstruction"
+    },
+    {
+      "entry": "mod:30",
+      "sprite": "sHexAdrenalModule"
+    },
+    {
+      "entry": "mod:31",
+      "sprite": "sHexEssenceSap"
+    },
+    {
+      "entry": "mod:32",
+      "sprite": "sHexShieldDurability"
+    },
+    {
+      "entry": "mod:33",
+      "sprite": "sHexShieldCooldown"
+    },
+    {
+      "entry": "mod:34",
+      "sprite": "sHexBarrier"
+    },
+    {
+      "entry": "mod:35",
+      "sprite": "sHexOmniShield"
+    },
+    {
+      "entry": "mod:36",
+      "sprite": "sHexShieldRadius"
+    },
+    {
+      "entry": "mod:37",
+      "sprite": "sHexFocusedShields"
+    },
+    {
+      "entry": "mod:38",
+      "sprite": "sHexRadiantShields"
+    },
+    {
+      "entry": "mod:39",
+      "sprite": "sHexWeaponizedShields"
+    },
+    {
+      "entry": "mod:40",
+      "sprite": "sHexVolatileShields"
+    },
+    {
+      "entry": "mod:41",
+      "sprite": "sHexDischarge"
+    },
+    {
+      "entry": "mod:42",
+      "sprite": "sHexRegenerativeShields"
+    },
+    {
+      "entry": "mod:43",
+      "sprite": "sHexEmergencySystems"
+    },
+    {
+      "entry": "mod:44",
+      "sprite": "sHexImprovedThrusters"
+    },
+    {
+      "entry": "mod:45",
+      "sprite": "sHexStreamline"
+    },
+    {
+      "entry": "mod:46",
+      "sprite": "sHexDeadlyWake"
+    },
+    {
+      "entry": "mod:47",
+      "sprite": "sHexKineticBoost"
+    },
+    {
+      "entry": "mod:48",
+      "sprite": "sHexStabilization"
+    },
+    {
+      "entry": "mod:49",
+      "sprite": "sHexAgility"
+    },
+    {
+      "entry": "mod:50",
+      "sprite": "sHexPowerReserves"
+    },
+    {
+      "entry": "mod:51",
+      "sprite": "sHexBlink"
+    },
+    {
+      "entry": "mod:52",
+      "sprite": "sHexDrones"
+    },
+    {
+      "entry": "mod:53",
+      "sprite": "sHexGraceProtocol"
+    },
+    {
+      "entry": "mod:54",
+      "sprite": "sHexAdvancedEngineering"
+    },
+    {
+      "entry": "mod:55",
+      "sprite": "sHexAssaultDrones"
+    },
+    {
+      "entry": "mod:56",
+      "sprite": "sHexDefenseDrone"
+    },
+    {
+      "entry": "mod:57",
+      "sprite": "sHexMines"
+    },
+    {
+      "entry": "mod:58",
+      "sprite": "sHexAutoMines"
+    },
+    {
+      "entry": "mod:59",
+      "sprite": "sHexLoadedMines"
+    },
+    {
+      "entry": "mod:60",
+      "sprite": "sHexTurret"
+    },
+    {
+      "entry": "mod:61",
+      "sprite": "sHexPointDefense"
+    },
+    {
+      "entry": "mod:62",
+      "sprite": "sHexWarMachine"
+    },
+    {
+      "entry": "mod:63",
+      "sprite": "sHexCounterArtillery"
+    },
+    {
+      "entry": "mod:64",
+      "sprite": "sHexAlly"
+    },
+    {
+      "entry": "mod:65",
+      "sprite": "sHexIntegratedWeaponry"
+    },
+    {
+      "entry": "mod:66",
+      "sprite": "sHexGuardian"
+    },
+    {
+      "entry": "mod:67",
+      "sprite": "sHexWingman"
+    },
+    {
+      "entry": "mod:68",
+      "sprite": "sHexElegantConstruction"
+    },
+    {
+      "entry": "mod:69",
+      "sprite": "sHexSelfDestruction"
+    },
+    {
+      "entry": "mod:70",
+      "sprite": "sHexOverseer"
+    },
+    {
+      "entry": "mod:71",
+      "sprite": "sHexOverclock"
+    },
+    {
+      "entry": "mod:72",
+      "sprite": "sHexCandescence"
+    },
+    {
+      "entry": "mod:73",
+      "sprite": "sHexCorrosion"
+    },
+    {
+      "entry": "mod:74",
+      "sprite": "sHexPurge"
+    },
+    {
+      "entry": "mod:75",
+      "sprite": "sHexPurification"
+    },
+    {
+      "entry": "mod:76",
+      "sprite": "sHexSkirmish"
+    },
+    {
+      "entry": "mod:77",
+      "sprite": "sHexTerminate"
+    },
+    {
+      "entry": "mod:78",
+      "sprite": "sHexBlitz"
+    },
+    {
+      "entry": "mod:79",
+      "sprite": "sHexEfficiency"
+    },
+    {
+      "entry": "mod:80",
+      "sprite": "sHexCoreShielding"
+    },
+    {
+      "entry": "mod:81",
+      "sprite": "sHexAdaptiveArmor"
+    },
+    {
+      "entry": "mod:82",
+      "sprite": "sHexChanneling"
+    },
+    {
+      "entry": "mod:83",
+      "sprite": "sHexAegis"
+    },
+    {
+      "entry": "mod:84",
+      "sprite": "sHexRetribution"
+    },
+    {
+      "entry": "mod:85",
+      "sprite": "sHexLance"
+    },
+    {
+      "entry": "mod:86",
+      "sprite": "sHexGemini"
+    },
+    {
+      "entry": "mod:87",
+      "sprite": "sHexSubsumption"
+    },
+    {
+      "entry": "mod:88",
+      "sprite": "sHexNanotech"
+    },
+    {
+      "entry": "mod:89",
+      "sprite": "sHexEvolution"
+    },
+    {
+      "entry": "mod:90",
+      "sprite": "sHexEchoStrike"
+    },
+    {
+      "entry": "mod:91",
+      "sprite": "sHexBattalionDrones"
+    },
+    {
+      "entry": "mod:92",
+      "sprite": "sHexTerminalDirective"
+    },
+    {
+      "entry": "mod:93",
+      "sprite": "sHexFleetCommander"
+    },
+    {
+      "entry": "mod:94",
+      "sprite": "sHexArcBarrier"
+    },
+    {
+      "entry": "mod:95",
+      "sprite": "sHexCounterpulse"
+    },
+    {
+      "entry": "mod:96",
+      "sprite": "sHexReconstitution"
+    },
+    {
+      "entry": "mod:97",
+      "sprite": "sHexNanotechDissemination"
+    },
+    {
+      "entry": "mod:98",
+      "sprite": "sHexDecoySignal"
+    },
+    {
+      "entry": "mod:99",
+      "sprite": "sHexMediCharge"
+    },
+    {
+      "entry": "mod:100",
+      "sprite": "sHexEvasion"
+    },
+    {
+      "entry": "mod:101",
+      "sprite": "sHexOutmaneuver"
+    },
+    {
+      "entry": "mod:102",
+      "sprite": "sHexOverpower"
+    },
+    {
+      "entry": "mod:103",
+      "sprite": "sHexShieldedDrones"
+    },
+    {
+      "entry": "mod:104",
+      "sprite": "sHexRebuke"
+    },
+    {
+      "entry": "mod:105",
+      "sprite": "sHexVoid"
+    },
+    {
+      "entry": "mod:106",
+      "sprite": "sHexFlashShielding"
+    },
+    {
+      "entry": "mod:107",
+      "sprite": "sHexRetaliationShields"
+    },
+    {
+      "entry": "mod:108",
+      "sprite": "sHexStrafe"
+    },
+    {
+      "entry": "mod:109",
+      "sprite": "sHexPriorityZero"
+    },
+    {
+      "entry": "mod:110",
+      "sprite": "sHexTacticalLink"
+    },
+    {
+      "entry": "mod:111",
+      "sprite": "sHexSupportSpecialist"
+    },
+    {
+      "entry": "mod:112",
+      "sprite": "sHexRegression"
+    },
+    {
+      "entry": "mod:113",
+      "sprite": "sHexConversion"
+    },
+    {
+      "entry": "mod:114",
+      "sprite": "sHexHiddenPower"
+    },
+    {
+      "entry": "mod:115",
+      "sprite": "sHexLastStand"
+    },
+    {
+      "entry": "mod:116",
+      "sprite": "sHexMastery"
+    },
+    {
+      "entry": "mod:117",
+      "sprite": "sHexApotheosis"
+    },
+    {
+      "entry": "mod:118",
+      "sprite": "sHexTempestBreak"
+    },
+    {
+      "entry": "mod:119",
+      "sprite": "sHexSanctuary"
+    },
+    {
+      "entry": "mod:120",
+      "sprite": "sHexSaturationFire"
+    },
+    {
+      "entry": "mod:121",
+      "sprite": "sHexApexMachinery"
+    },
+    {
+      "entry": "mod:122",
+      "sprite": "sHexLeafOnTheWind"
+    },
+    {
+      "entry": "mod:123",
+      "sprite": "sHexCelestialSurge"
+    },
+    {
+      "entry": "mod:124",
+      "sprite": "sHexVitalBond"
+    },
+    {
+      "entry": "mod:125",
+      "sprite": "sHexAnnihilation"
+    },
+    {
+      "entry": "mod:126",
+      "sprite": "sHexAtaraxia"
+    },
+    {
+      "entry": "mod:127",
+      "sprite": "sHexDyingStar"
+    },
+    {
+      "entry": "mod:128",
+      "sprite": "sHexWarpStrike"
+    },
+    {
+      "entry": "mod:129",
+      "sprite": "sHexRancor"
+    },
+    {
+      "entry": "mod:130",
+      "sprite": "sHexBarrage"
+    },
+    {
+      "entry": "mod:131",
+      "sprite": "sHexSingularStrikeNew"
+    },
+    {
+      "entry": "mod:132",
+      "sprite": "sHexBurnoutReactors"
+    },
+    {
+      "entry": "mod:133",
+      "sprite": "sHexVoidSlice"
+    },
+    {
+      "entry": "mod:134",
+      "sprite": "sHexChargedMines"
+    },
+    {
+      "entry": "mod:135",
+      "sprite": "sHexMortar"
+    },
+    {
+      "entry": "mod:136",
+      "sprite": "sHexDeflagration"
+    },
+    {
+      "entry": "mod:137",
+      "sprite": "sHexChargedShields"
+    },
+    {
+      "entry": "mod:138",
+      "sprite": "sHexStrafingStrikes"
+    },
+    {
+      "entry": "mod:139",
+      "sprite": "sHexInfuse"
+    },
+    {
+      "entry": "mod:140",
+      "sprite": "sHexTacticalBeacon"
+    },
+    {
+      "entry": "mod:141",
+      "sprite": "sHexSlipstream"
+    },
+    {
+      "entry": "mod:142",
+      "sprite": "sHexDoubleTap"
+    },
+    {
+      "entry": "mod:143",
+      "sprite": "sHexHypermetabolism"
+    },
+    {
+      "entry": "mod:144",
+      "sprite": "sHexTwinStrike"
+    },
+    {
+      "entry": "mod:145",
+      "sprite": "sHexDefiance"
+    },
+    {
+      "entry": "mod:146",
+      "sprite": "sHexHeavyCaliber"
+    },
+    {
+      "entry": "mod:147",
+      "sprite": "sHexWinnow"
+    },
+    {
+      "entry": "mod:148",
+      "sprite": "sHexOutrageModule"
+    },
+    {
+      "entry": "mod:149",
+      "sprite": "sHexPolarInversion"
+    },
+    {
+      "entry": "mod:150",
+      "sprite": "sHexSolarHeart"
+    },
+    {
+      "entry": "mod:151",
+      "sprite": "sHexGalvanicOutburst"
+    },
+    {
+      "entry": "mod:152",
+      "sprite": "sHexScorchingWake"
+    },
+    {
+      "entry": "mod:153",
+      "sprite": "sHexDeathBlossom"
+    },
+    {
+      "entry": "mod:154",
+      "sprite": "sHexRicochet"
+    },
+    {
+      "entry": "mod:155",
+      "sprite": "sHexPhantomStrike"
+    },
+    {
+      "entry": "mod:156",
+      "sprite": "sHexRevelation"
+    },
+    {
+      "entry": "mod:157",
+      "sprite": "sHexEvolutionaryNiche"
+    },
+    {
+      "entry": "mod:158",
+      "sprite": "sHexChaoticAmbition"
+    },
+    {
+      "entry": "mod:159",
+      "sprite": "sHexPropulsiveMunitions"
+    },
+    {
+      "entry": "mod:160",
+      "sprite": "sHexObsession"
+    },
+    {
+      "entry": "mod:161",
+      "sprite": "sHexBravado"
+    },
+    {
+      "entry": "mod:162",
+      "sprite": "sHexSpecialistMine"
+    },
+    {
+      "entry": "mod:163",
+      "sprite": "sHexSpecialistTurret"
+    },
+    {
+      "entry": "mod:164",
+      "sprite": "sHexSpecialistDrone"
+    },
+    {
+      "entry": "mod:165",
+      "sprite": "sHexSpecialistAlly"
+    },
+    {
+      "entry": "mod:166",
+      "sprite": "sHexRampage"
+    },
+    {
+      "entry": "mod:167",
+      "sprite": "sHexDiscord"
+    },
+    {
+      "entry": "mod:168",
+      "sprite": "sHexLockedFrame"
+    },
+    {
+      "entry": "mod:169",
+      "sprite": "sHexLockedFrame"
+    },
+    {
+      "entry": "mod:170",
+      "sprite": "sHexTransmogrification"
+    },
+    {
+      "entry": "mod:171",
+      "sprite": "sHexEnergizedShields"
+    },
+    {
+      "entry": "mod:172",
+      "sprite": "sHexMasochism"
+    },
+    {
+      "entry": "mod:173",
+      "sprite": "sHexGrandeur"
+    },
+    {
+      "entry": "mod:174",
+      "sprite": "sHexPowerSpike"
+    },
+    {
+      "entry": "mod:175",
+      "sprite": "sHexMaelstrom"
+    },
+    {
+      "entry": "mod:176",
+      "sprite": "sHexSpontaneousGeneration"
+    },
+    {
+      "entry": "mod:177",
+      "sprite": "sHexFarsight"
+    },
+    {
+      "entry": "mod:178",
+      "sprite": "sHexExplosiveGrowth"
+    },
+    {
+      "entry": "mod:179",
+      "sprite": "sHexChallenger"
+    },
+    {
+      "entry": "part:0",
+      "sprite": "sDreadnoughtWing"
+    },
+    {
+      "entry": "part:1",
+      "sprite": "sDreadnoughtGunLarge"
+    },
+    {
+      "entry": "part:2",
+      "sprite": "sDreadnoughtGunSmall"
+    },
+    {
+      "entry": "part:3",
+      "sprite": "sWarbringerChasis"
+    },
+    {
+      "entry": "part:4",
+      "sprite": "sWarbringerWing"
+    },
+    {
+      "entry": "part:5",
+      "sprite": "sWarbringerThruster"
+    },
+    {
+      "entry": "part:6",
+      "sprite": "sWarbringerBroadside"
+    },
+    {
+      "entry": "part:7",
+      "sprite": "sWarbringerLaser"
+    },
+    {
+      "entry": "part:8",
+      "sprite": "sCeratotitanThorax"
+    },
+    {
+      "entry": "part:9",
+      "sprite": "sCeratotitanPincer"
+    },
+    {
+      "entry": "part:10",
+      "sprite": "sCeratotitanElytra"
+    },
+    {
+      "entry": "part:11",
+      "sprite": "sCeratotitanWing"
+    },
+    {
+      "entry": "part:12",
+      "sprite": "sGlaucusSegment"
+    },
+    {
+      "entry": "part:13",
+      "sprite": "sGlaucusEye"
+    },
+    {
+      "entry": "part:14",
+      "sprite": "sStarEaterSegment"
+    },
+    {
+      "entry": "part:15",
+      "sprite": "sStarEaterEye"
+    },
+    {
+      "entry": "part:16",
+      "sprite": "sStarEaterAbdomen"
+    },
+    {
+      "entry": "part:17",
+      "sprite": "sStationNode"
+    },
+    {
+      "entry": "part:18",
+      "sprite": "sStation"
+    },
+    {
+      "entry": "part:19",
+      "sprite": "sBulwarkBarrierDim"
+    },
+    {
+      "entry": "part:20",
+      "sprite": "sBulwarkBody"
+    },
+    {
+      "entry": "part:21",
+      "sprite": "sBulwarkBody2"
+    },
+    {
+      "entry": "part:22",
+      "sprite": "sBulwarkBody3"
+    },
+    {
+      "entry": "part:23",
+      "sprite": "sBulwarkArm"
+    },
+    {
+      "entry": "part:24",
+      "sprite": "sBulwarkTail"
+    },
+    {
+      "entry": "part:25",
+      "sprite": "sBulwarkThruster"
+    },
+    {
+      "entry": "part:26",
+      "sprite": "sBulwarkThrusterLarge"
+    },
+    {
+      "entry": "part:27",
+      "sprite": "sWormHead"
+    },
+    {
+      "entry": "part:28",
+      "sprite": "sWormBody"
+    },
+    {
+      "entry": "part:29",
+      "sprite": "sGaussJawLeft"
+    },
+    {
+      "entry": "part:30",
+      "sprite": "sGaussJawRight"
+    },
+    {
+      "entry": "part:31",
+      "sprite": "sGaussJawLeft2"
+    },
+    {
+      "entry": "part:32",
+      "sprite": "sGaussJawRight2"
+    },
+    {
+      "entry": "part:33",
+      "sprite": "sSquidJawLeft"
+    },
+    {
+      "entry": "part:34",
+      "sprite": "sSquidJawRight"
+    },
+    {
+      "entry": "part:35",
+      "sprite": "sSquidTent"
+    },
+    {
+      "entry": "part:36",
+      "sprite": "sSquidTent"
+    },
+    {
+      "entry": "part:37",
+      "sprite": "sEclipseChasis"
+    },
+    {
+      "entry": "part:38",
+      "sprite": "sEclipsePanel"
+    },
+    {
+      "entry": "part:39",
+      "sprite": "sEclipseShield"
+    },
+    {
+      "entry": "part:40",
+      "sprite": "sCrucibleCornerCool"
+    },
+    {
+      "entry": "part:41",
+      "sprite": "sCrucibleEdgeCool"
+    }
+  ]
+}

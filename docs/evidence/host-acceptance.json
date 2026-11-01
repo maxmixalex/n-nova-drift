@@ -1,0 +1,36 @@
+{
+  "started_utc": "2026-11-01T12:15:13.099953+00:00",
+  "finished_utc": "2026-11-01T12:15:44.199500+00:00",
+  "passed": true,
+  "test_count": 32,
+  "tests_failed": 0,
+  "game_sizeof_bytes": 52792,
+  "source_changes_during_validation": [],
+  "steps": [
+    {
+      "name": "configure",
+      "returncode": 0,
+      "seconds": 0.327
+    },
+    {
+      "name": "build",
+      "returncode": 0,
+      "seconds": 28.609
+    },
+    {
+      "name": "ctest",
+      "returncode": 0,
+      "seconds": 1.798
+    },
+    {
+      "name": "app-flow-v3",
+      "returncode": 0,
+      "seconds": 0.219
+    },
+    {
+      "name": "localization-v3",
+      "returncode": 0,
+      "seconds": 0.128
+    }
+  ]
+}

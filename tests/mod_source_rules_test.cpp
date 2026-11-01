@@ -66,4 +66,51 @@ static void sourcePowerups(){
  setup();g.player.hull=10;g.player.shield=10;g.player.shield_delay=500;Game baseline=g;for(unsigned i=0;i<30;i++)baseline.updatePlayer(none);g.emitPickup(g.player.x,g.player.y,PICKUP_POWER,3);g.updatePickups();assert(g.source_medi_ticks_==30&&g.player.hull==10);for(unsigned i=0;i<30;i++)g.updatePlayer(none);assert(g.player.hull==baseline.player.hull+20&&g.player.shield==30&&!g.source_medi_ticks_);
  setup();g.player.hull=10;g.player.shield=0;g.player.shield_delay=500;baseline=g;for(unsigned i=0;i<30;i++)baseline.updatePlayer(none);g.emitPickup(g.player.x,g.player.y,PICKUP_POWER,3);g.updatePickups();for(unsigned i=0;i<30;i++)g.updatePlayer(none);assert(g.player.hull==baseline.player.hull+20&&g.player.shield==0);
 }
-int main(){homingSourceGoldens();lastStandSourceGoldens();bastionSourceCurve();challengerSourceGoldens();sourcePowerups();puts("Homing Strike source axes/seek/degeneration, Last Stand revival/expansion, Bastion front/follow/fade, Challenger families/scales/retry/reward PASS");}
+// Direct source paths: mRancor_Alarm_0, damageReduction, triggerShield,
+// and Hidden Power's explicitly permitted shield-gear constructs.
+static void defensiveSourceCorrections(){
+ setup();g.player.mods[M_BLINK]=1;g.player.x=50*FP;g.player.y=100*FP;g.player.angle=0;
+ int behind=g.spawnEnemy(E_DRONE,35,100),ahead=g.spawnEnemy(E_DRONE,130,100);assert(behind>=0&&ahead>=0);
+ g.enemies[behind].hull=g.enemies[behind].max_hull=g.enemies[ahead].hull=g.enemies[ahead].max_hull=1000;
+ g.enemies[behind].vx=g.enemies[behind].vy=g.enemies[ahead].vx=g.enemies[ahead].vy=0;
+ GameInput blink={};blink.ability=true;g.updatePlayer(blink);
+ assert(g.enemies[behind].hull==900&&g.enemies[ahead].hull==900);
+ assert(g.enemies[behind].vx<0&&g.enemies[ahead].vx>0);
+ setup();int thrust=g.stats.thrust;g.player.mods[M_X_RANCOR]=1;g.recalculate();assert(g.stats.thrust==thrust*90/100);
+ setup();g.player.mods[M_CHARGED_SHOT]=g.player.mods[M_X_RANCOR]=g.player.mods[M_X_CHARGED_SHIELDS]=1;
+ g.player.charge=1;g.player.angle=0;g.player.vx=g.player.vy=0;g.stats.thrust=1400;
+ GameInput charging={};charging.up=charging.fire=true;g.updatePlayer(charging);assert(g.player.vx==126);
+ setup();g.player.mods[M_AEGIS]=1;GameInput none={},up={};up.up=true;
+ for(unsigned i=0;i<75;i++)g.updatePlayer(none);
+ assert(g.aegis_clock_==75&&g.incomingDamagePercent()==85);
+ g.updatePlayer(up);assert(g.aegis_clock_==60&&g.incomingDamagePercent()==88);
+ g.updatePlayer(up);assert(g.aegis_clock_==45&&g.incomingDamagePercent()==91);
+ for(unsigned i=0;i<3;i++)g.updatePlayer(up);
+ assert(!g.aegis_clock_&&g.incomingDamagePercent()==100);
+ setup();g.player.mods[M_ADAPTIVE_ARMOR]=1;
+ static const unsigned stacks[]={0,1,5,10,20,30,40,50};
+ static const unsigned incoming[]={100,99,95,90,82,74,67,61};
+ for(unsigned i=0;i<8;i++){g.armor_stacks_=stacks[i];assert(g.incomingDamagePercent()==incoming[i]);}
+ g.player.mods[M_AEGIS]=1;g.aegis_clock_=75;assert(g.incomingDamagePercent()==46);
+ g.player.mods[M_OMNI_SHIELD]=1;assert(g.incomingDamagePercent(true)==31);
+ g.player.body=B_SENTINEL;assert(g.incomingDamagePercent(true)==25);
+ // Initial and repeated hits use the full incoming damage, not absorbed HP.
+ setup();g.player.invulnerable=0;g.stats.shield_cooldown=100;
+ g.damagePlayer(1);assert(g.player.shield_delay==100);
+ g.player.invulnerable=0;g.player.shield_delay=20;g.damagePlayer(10);assert(g.player.shield_delay==50);
+ g.player.invulnerable=0;g.player.shield=0;g.player.shield_delay=20;g.damagePlayer(10);assert(g.player.shield_delay==50);
+ g.player.invulnerable=0;g.player.shield_delay=20;g.player.mods[M_OMNI_SHIELD]=1;g.damagePlayer(10);assert(g.player.shield_delay==38);
+ g.player.invulnerable=0;g.player.shield_delay=95;g.damagePlayer(10);assert(g.player.shield_delay==100);
+ g.player.invulnerable=0;g.player.shield_delay=20;g.player.mods[M_X_TEMPEST_BREAK]=1;g.damagePlayer(1);assert(g.player.shield_delay==20);
+ g.player.invulnerable=0;g.player.shield_delay=0;g.damagePlayer(1);assert(g.player.shield_delay==100);
+ setup();g.player.invulnerable=0;g.player.shield_type=S_BASTION;g.recalculate();g.damagePlayer(1);assert(g.player.shield_delay==0);
+ setup();g.wild_mode=true;g.player.shield_type=S_BASTION;g.player.mods[M_DRONES]=1;
+ g.player.mods[M_INCENDIARY]=g.player.mods[M_BLAST_RADIUS]=g.player.mods[M_VOLATILE_SHIELDS]=g.player.mods[M_DEADLY_WAKE]=1;g.recalculate();
+ int bastion=g.spawnConstruct(C_BASTION),drone=g.spawnConstruct(C_DRONE);assert(bastion>=0&&drone>=0);
+ assert(g.takeMod(M_X_HIDDEN_POWER));assert(g.constructs[bastion].active&&!g.constructs[drone].active);
+ assert(g.constructLimit(C_BASTION)==1&&!g.constructLimit(C_DRONE));assert(g.spawnConstruct(C_DRONE)<0);
+ g.constructs[bastion].active=0;assert(g.spawnConstruct(C_BASTION)>=0);
+ assert(g.validState());
+ puts("Source Rancor/charge thrust, Hidden Power Bastion, Aegis decay, Adaptive Armor/Omni composition and cooldown, Blink impulse PASS");
+}
+int main(){defensiveSourceCorrections();homingSourceGoldens();lastStandSourceGoldens();bastionSourceCurve();challengerSourceGoldens();sourcePowerups();puts("Homing Strike source axes/seek/degeneration, Last Stand revival/expansion, Bastion front/follow/fade, Challenger families/scales/retry/reward PASS");}

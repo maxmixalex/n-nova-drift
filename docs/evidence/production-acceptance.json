@@ -1,0 +1,390 @@
+{
+  "passed": true,
+  "scope": "Actual uninstrumented ARM launcher and all 22 packs installed from the extracted production ZIP. Firebird CX II CAS; keyboard/touch input and LCD screenshots. Upgrade, victory and Crucible use explicitly synthetic final-layout fixtures. This is not a natural full-game playthrough or a physical-calculator test.",
+  "checks": {
+    "fresh_run_held_confirm_stops_at_mode_page": true,
+    "touch_aim_and_numeric_8_cooperate_after_mode_release": true,
+    "held_touch_does_not_activate_pause_row": true,
+    "ordinary_save_and_resume": true,
+    "held_fire_upgrade_navigation_no_purchase": true,
+    "daily_actual_clock_page_observed_then_date_selected": true,
+    "daily_rules_play_save_and_resume": true,
+    "ending_held_confirm_isolated_and_full_automatic_completion": true,
+    "ending_results_career_profile_and_return_to_title": true,
+    "crucible_arena_and_save": true,
+    "all_exported_state_headers_crc_and_native_validState": true,
+    "isolated_nand_and_independent_usb_download_sessions": true,
+    "all_23_playable_payloads_match_candidate_zip_and_manifest": true
+  },
+  "calendar": {
+    "observed_rtc_date": "2026-11-01",
+    "selected_date": "2026-01-01",
+    "epoch_day": 20454,
+    "variant": "Cosmic Egg",
+    "modifier": 15
+  },
+  "game_bytes": 52792,
+  "snapshot_bytes": 52816,
+  "scenarios": {
+    "natural": {
+      "valid": 1,
+      "crc_ok": true,
+      "state_valid": true,
+      "loadable": true,
+      "state": 1,
+      "frame": 191,
+      "wave": 1,
+      "score": 0,
+      "banked_upgrades": 0,
+      "rerolls": 3,
+      "mods_taken": 0,
+      "rerolls_used": 0,
+      "mod_rank_total": 0,
+      "banished_count": 0,
+      "daily_day": 0,
+      "daily_variant": 0,
+      "daily_modifier": 0,
+      "daily_egg_hull": 0,
+      "shots_fired": 20,
+      "victory": false,
+      "sha256": "6df2d53ea909f16b12f60b77b7a12d0b9187566396dc1c5ee969a63b33faedec",
+      "settings_crc_ok": true,
+      "screenshots": 10,
+      "contact_sheet": "natural/contact.png",
+      "save_inspection": "natural/save-inspection.json",
+      "synthetic_fixture": false
+    },
+    "natural-resume": {
+      "valid": 1,
+      "crc_ok": true,
+      "state_valid": true,
+      "loadable": true,
+      "state": 1,
+      "frame": 251,
+      "wave": 1,
+      "score": 62,
+      "banked_upgrades": 0,
+      "rerolls": 3,
+      "mods_taken": 0,
+      "rerolls_used": 0,
+      "mod_rank_total": 0,
+      "banished_count": 0,
+      "daily_day": 0,
+      "daily_variant": 0,
+      "daily_modifier": 0,
+      "daily_egg_hull": 0,
+      "shots_fired": 20,
+      "victory": false,
+      "sha256": "082377c61f641da6cddb52a3554e85b858a8e5cd40f2785a0c3b5fa16bad1a8d",
+      "settings_crc_ok": true,
+      "screenshots": 9,
+      "contact_sheet": "natural-resume/contact.png",
+      "save_inspection": "natural-resume/save-inspection.json",
+      "synthetic_fixture": false
+    },
+    "upgrade": {
+      "valid": 1,
+      "crc_ok": true,
+      "state_valid": true,
+      "loadable": true,
+      "state": 1,
+      "frame": 80,
+      "wave": 13,
+      "score": 12345,
+      "banked_upgrades": 2,
+      "rerolls": 12,
+      "mods_taken": 0,
+      "rerolls_used": 0,
+      "mod_rank_total": 0,
+      "banished_count": 0,
+      "daily_day": 0,
+      "daily_variant": 0,
+      "daily_modifier": 0,
+      "daily_egg_hull": 0,
+      "shots_fired": 1,
+      "victory": false,
+      "sha256": "2774300c5a1e3b3b986a83be552410aaeefcbc114d3658a43229316970819a71",
+      "settings_crc_ok": true,
+      "screenshots": 10,
+      "contact_sheet": "upgrade/contact.png",
+      "save_inspection": "upgrade/save-inspection.json",
+      "synthetic_fixture": true
+    },
+    "daily": {
+      "valid": 1,
+      "crc_ok": true,
+      "state_valid": true,
+      "loadable": true,
+      "state": 1,
+      "frame": 75,
+      "wave": 1,
+      "score": 0,
+      "banked_upgrades": 0,
+      "rerolls": 10,
+      "mods_taken": 0,
+      "rerolls_used": 0,
+      "mod_rank_total": 0,
+      "banished_count": 0,
+      "daily_day": 20454,
+      "daily_variant": 4,
+      "daily_modifier": 15,
+      "daily_egg_hull": 15000,
+      "shots_fired": 0,
+      "victory": false,
+      "sha256": "6d7975d30ed3a5a07cfb455d31f0939dd5a65cbcc2af93a4024e26747326f50b",
+      "settings_crc_ok": true,
+      "screenshots": 11,
+      "contact_sheet": "daily/contact.png",
+      "save_inspection": "daily/save-inspection.json",
+      "synthetic_fixture": false
+    },
+    "daily-resume": {
+      "valid": 1,
+      "crc_ok": true,
+      "state_valid": true,
+      "loadable": true,
+      "state": 1,
+      "frame": 133,
+      "wave": 1,
+      "score": 0,
+      "banked_upgrades": 0,
+      "rerolls": 10,
+      "mods_taken": 0,
+      "rerolls_used": 0,
+      "mod_rank_total": 0,
+      "banished_count": 0,
+      "daily_day": 20454,
+      "daily_variant": 4,
+      "daily_modifier": 15,
+      "daily_egg_hull": 15000,
+      "shots_fired": 0,
+      "victory": false,
+      "sha256": "03f8a7296948e2205047efe00de3ba0756dc7321575c67ae26ac10059e668ef3",
+      "settings_crc_ok": true,
+      "screenshots": 9,
+      "contact_sheet": "daily-resume/contact.png",
+      "save_inspection": "daily-resume/save-inspection.json",
+      "synthetic_fixture": false
+    },
+    "ending": {
+      "valid": 0,
+      "crc_ok": true,
+      "state_valid": true,
+      "loadable": false,
+      "state": 4,
+      "frame": 2,
+      "wave": 120,
+      "score": 2670,
+      "banked_upgrades": 0,
+      "rerolls": 10,
+      "mods_taken": 0,
+      "rerolls_used": 0,
+      "mod_rank_total": 0,
+      "banished_count": 0,
+      "daily_day": 0,
+      "daily_variant": 0,
+      "daily_modifier": 0,
+      "daily_egg_hull": 0,
+      "shots_fired": 3,
+      "victory": true,
+      "sha256": "d77d30eab6bcee65e0a43d1a3c4a1bd4ca26757c0e3d108e83850517c5922759",
+      "settings_crc_ok": true,
+      "screenshots": 10,
+      "contact_sheet": "ending/contact.png",
+      "save_inspection": "ending/save-inspection.json",
+      "synthetic_fixture": true
+    },
+    "crucible": {
+      "valid": 1,
+      "crc_ok": true,
+      "state_valid": true,
+      "loadable": true,
+      "state": 1,
+      "frame": 169,
+      "wave": 80,
+      "score": 0,
+      "banked_upgrades": 0,
+      "rerolls": 10,
+      "mods_taken": 0,
+      "rerolls_used": 0,
+      "mod_rank_total": 0,
+      "banished_count": 0,
+      "daily_day": 0,
+      "daily_variant": 0,
+      "daily_modifier": 0,
+      "daily_egg_hull": 0,
+      "shots_fired": 0,
+      "victory": false,
+      "sha256": "4cc7d62fd2aca2bc60e1021bf0ce404685aca86d289a4ee931293c707ac12bd3",
+      "settings_crc_ok": true,
+      "screenshots": 8,
+      "contact_sheet": "crucible/contact.png",
+      "save_inspection": "crucible/save-inspection.json",
+      "synthetic_fixture": true
+    }
+  },
+  "processes": {
+    "count": 16,
+    "all_completed": true,
+    "errors": 0,
+    "final_usb_queued": 0,
+    "logs": [
+      "install/native.events.jsonl",
+      "natural/download.events.jsonl",
+      "natural/native.events.jsonl",
+      "natural-resume/download.events.jsonl",
+      "natural-resume/native.events.jsonl",
+      "upgrade/download.events.jsonl",
+      "upgrade/native.events.jsonl",
+      "daily/download.events.jsonl",
+      "daily/finish.events.jsonl",
+      "daily/open.events.jsonl",
+      "daily-resume/download.events.jsonl",
+      "daily-resume/native.events.jsonl",
+      "ending/download.events.jsonl",
+      "ending/native.events.jsonl",
+      "crucible/download.events.jsonl",
+      "crucible/native.events.jsonl"
+    ]
+  },
+  "candidate_zip": {
+    "file": "candidate-package.zip",
+    "sha256": "dde980f2327f149b7f78795fc74169d63943fae9671dde8a043b05dccbb5ea37",
+    "playable_payloads_checked": 23,
+    "all_payloads_identical": true,
+    "payloads": [
+      {
+        "path": "nNova/nNova.tns",
+        "bytes": 375376,
+        "sha256": "2538a2d626008c866aa4d2e57c9ba32f0468ad603ff2132e609ae054b4905dca"
+      },
+      {
+        "path": "nNova/data/nNova.changelog.dat.tns",
+        "bytes": 55698,
+        "sha256": "6b00360b5032f16aa39e913b9d376d6bf634a5d526ab84e3680dfce0f7b34a2b"
+      },
+      {
+        "path": "nNova/data/nNova.dat.tns",
+        "bytes": 181136,
+        "sha256": "529051444f30455aeb0f8b9bb60f3bb4bced8c2a12d31d1d7eb7b4fec914287e"
+      },
+      {
+        "path": "nNova/data/nNova.deu.locale.dat.tns",
+        "bytes": 93946,
+        "sha256": "005f140fd90b641af6404fa699e19464a3f1381e614d5d2d7a30ff722a5b41db"
+      },
+      {
+        "path": "nNova/data/nNova.eng.locale.dat.tns",
+        "bytes": 85488,
+        "sha256": "f73ca63b07743079c5cd6f9fcfb689c6ef8301dfb85ed0689ebda4c869ec3501"
+      },
+      {
+        "path": "nNova/data/nNova.fra.locale.dat.tns",
+        "bytes": 99539,
+        "sha256": "2e2eb41593b45d15a8734fc8de776095436bd99f6a087692136b6c6168141692"
+      },
+      {
+        "path": "nNova/data/nNova.gfx00.dat.tns",
+        "bytes": 2095957,
+        "sha256": "9c61a97024f92c35d8e29ea839aa407b1dff6a41cc8de496634666fec6d933d1"
+      },
+      {
+        "path": "nNova/data/nNova.gfx01.dat.tns",
+        "bytes": 2094352,
+        "sha256": "137efa7a4dc9cfec3e9658505365ed8f622433040a12bc5eb38cdf4ea1f142db"
+      },
+      {
+        "path": "nNova/data/nNova.gfx02.dat.tns",
+        "bytes": 1496836,
+        "sha256": "8f389803c7841f3b3ff8c6b39cc4be7b365996fbce020dddf529a6edf1e45e6d"
+      },
+      {
+        "path": "nNova/data/nNova.jpn.font.dat.tns",
+        "bytes": 128862,
+        "sha256": "99b655b00268c620ca4630b8576300647cde6203eaa76518bef1aec0f0fd7287"
+      },
+      {
+        "path": "nNova/data/nNova.jpn.locale.dat.tns",
+        "bytes": 87831,
+        "sha256": "f686bf9492a4ca2a38e6cd2a7b8a3fef6b6a9b8f766d17e05beffe0ece47ff64"
+      },
+      {
+        "path": "nNova/data/nNova.kor.font.dat.tns",
+        "bytes": 87447,
+        "sha256": "fb0f341810b1a0fc9ad0629fc9ee6f662f80f49daff030c6ab94523d5741f39d"
+      },
+      {
+        "path": "nNova/data/nNova.kor.locale.dat.tns",
+        "bytes": 93694,
+        "sha256": "8919bdf1a36760b2256a56ad9f0d8a6583993a4a126f9c40e6b9f6b12e153407"
+      },
+      {
+        "path": "nNova/data/nNova.lat.font.dat.tns",
+        "bytes": 15067,
+        "sha256": "34f16d0b5d64ee230695d321db3cb4fe247e004b120199332a1ad013995f4ef2"
+      },
+      {
+        "path": "nNova/data/nNova.pol.locale.dat.tns",
+        "bytes": 97965,
+        "sha256": "d5d280a96472d1a0fa5bf9535b5945ebb5a6a3bb2440f6b4305d7248b8b29a70"
+      },
+      {
+        "path": "nNova/data/nNova.por.locale.dat.tns",
+        "bytes": 96046,
+        "sha256": "437ecf79bdf500bc39d44b7d8518a722fe4ed220404291039b54231a998fc725"
+      },
+      {
+        "path": "nNova/data/nNova.rus.locale.dat.tns",
+        "bytes": 110791,
+        "sha256": "2da0ddc2be8826a04b4aa0e8b12ca7701c1b8747ad5e1ace08285359fecaa6f6"
+      },
+      {
+        "path": "nNova/data/nNova.skins.dat.tns",
+        "bytes": 26145,
+        "sha256": "398adf704fe8c8110a6b6dcd6025aaa0431be061a3e6e18be825c188060c5012"
+      },
+      {
+        "path": "nNova/data/nNova.spa.locale.dat.tns",
+        "bytes": 96287,
+        "sha256": "d34ba0f0a28db830cdc771bb80a8547c8d2e160970f5b1aecba8984affb713e3"
+      },
+      {
+        "path": "nNova/data/nNova.zhs.font.dat.tns",
+        "bytes": 183599,
+        "sha256": "8da9ffc3fb270426cdb2eafee6237062fce6f76bda3358a8185c312805645c99"
+      },
+      {
+        "path": "nNova/data/nNova.zhs.locale.dat.tns",
+        "bytes": 80929,
+        "sha256": "030c113dfc7ec367e8d1abeb231065298e106c94c354b6484a7994fbdc93af9b"
+      },
+      {
+        "path": "nNova/data/nNova.zht.font.dat.tns",
+        "bytes": 187395,
+        "sha256": "53932ebe783d433750a81fe3739b333f54aabf9243c0213713e7509fa188458f"
+      },
+      {
+        "path": "nNova/data/nNova.zht.locale.dat.tns",
+        "bytes": 84978,
+        "sha256": "57549d76724e4b64a696767aa997ed0cddd2d35bb2ae3bae55509ffc5b88bc0a"
+      }
+    ]
+  },
+  "key_screens": {
+    "title": "natural/00-title.png",
+    "held_confirm": "natural/01-held5-mode.png",
+    "touch_and_8": "natural/03-touch-plus8.png",
+    "held_touch_pause": "natural/04-heldtouch-pause.png",
+    "upgrade_before": "upgrade/01-heldfire-upgrade.png",
+    "upgrade_down": "upgrade/02-down-navigation.png",
+    "upgrade_up": "upgrade/03-up-navigation.png",
+    "daily_date": "daily/02-date-2026-01-01.png",
+    "daily_rules": "daily/03-rules.png",
+    "daily_play": "daily/04-daily-playing.png",
+    "daily_resume": "daily-resume/02-resumed-playing.png",
+    "ending": "ending/03-ending-22s.png",
+    "results": "ending/05-results.png",
+    "crucible": "crucible/01-crucible-arena.png"
+  },
+  "note": "All accepted production processes have complete successful event logs and empty final USB queues. No reset or USB recovery was needed. Two earlier runs had truncated event-log files despite successful gameplay/save export; their evidence is preserved separately in _prior-* and excluded from the accepted records."
+}

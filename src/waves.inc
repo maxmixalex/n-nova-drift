@@ -113,10 +113,21 @@ void Game::updateWaveSpawns() {
     if(formation==2){edge=(q.root_index&1)?2:0;position=((q.root_index/2+1)*65536)/((count+1)/2+1);}
     if(formation==7){edge=(q.root_index+q.edge)%4;position=((q.root_index/4+1)*65536)/((count+3)/4+1);}
     if(formation==6){edge=(q.root_index+q.repeat_index+q.edge)%4;position=(q.root_index*25031u+32768u)&65535u;}
-    if(formation==8&&s.spawn_parameter_q8!=SOURCE_UNDEFINED)position=(unsigned)clamp(s.spawn_parameter_q8*256,0,65535);
-    if(formation==3||formation==4){int spacing=formation==4?maxv(1,absn(sourceDefault(s.spawn_parameter_q8,84*256))/1536):10;int offset=((int)q.root_index-(int)count/2)*spacing;x=clamp(q.origin_x+offset,8,w-8);y=clamp(q.origin_y+absn(offset)/2,8,h-8);}
+    if(formation==8&&s.spawn_parameter_q8!=SOURCE_UNDEFINED){
+     int parameter=s.spawn_parameter_q8;
+     if(s.iterate_spawn_parameter!=SOURCE_UNDEFINED)parameter+=q.repeat_index*s.iterate_spawn_parameter;
+     position=(unsigned)clamp(parameter*256,0,65535);
+    }
+    if(formation==3||formation==4){int spacing=formation==4?maxv(1,absn(sourceDefault(s.spawn_parameter_q8,84*256))/1536):10;int offset=((int)q.root_index-(int)count/2)*spacing;x=clamp(q.origin_x+offset,8,w-8);y=clamp(q.origin_y+(formation==4?absn(offset)/2:0),8,h-8);}
     else {if(edge==0||edge==2){x=edge==0?5:w-5;y=8+(int)(position*(unsigned)(h-16)/65536);}else{x=8+(int)(position*(unsigned)(w-16)/65536);y=edge==1?5:h-5;}}
     if(formation==5){unsigned arc=(unsigned)maxv(15,absn(sourceDefault(s.spawn_parameter_q8,90*256))/256);uint8_t a=(uint8_t)(edge*64+128+(int)(q.root_index*arc*256/maxv(1,count)/360)-(int)arc*128/360);x=w/2+dirX(a)*(w/2-8)/256;y=h/2+dirY(a)*(h/2-8)/256;}
+    if(formation==6){
+     unsigned total=count*(1+(unsigned)maxv(0,sourceDefault(s.repeating,0))),at=q.repeat_index*count+q.root_index;
+     unsigned sweep=(unsigned)maxv(1,absn(sourceDefault(s.spawn_parameter_q8,360*256))/256);
+     int start=s.fixed_direction==SOURCE_UNDEFINED?q.edge*64:s.fixed_direction*256/360;
+     uint8_t a=(uint8_t)(start+(uint64_t)at*sweep*256/(360*maxv(1u,total)));
+     x=w/2+dirX(a)*(w/2-8)/256;y=h/2+dirY(a)*(h/2-8)/256;
+    }
     if(s.entry==1||s.entry==2){uint8_t a=(uint8_t)(q.edge*64+q.root_index*29);x=pixel(wrap(player.x+dirX(a)*85,w));y=pixel(wrap(player.y+dirY(a)*70,h));}
     int slot=spawnSourceEnemy((SourceEnemy)s.enemy,x,y,s.rarity);if(slot<0)break; // A full part/enemy pool defers this recipe.
     Enemy &e=enemies[slot];q.leader=(int16_t)slot;q.leader_generation=e.generation;
@@ -140,7 +151,8 @@ void Game::updateWaveSpawns() {
     if(slot<0){if(sourceEnemyId(type)>=0)break;++q.follower_index;continue;}
     Enemy &e=enemies[slot];e.leader=linked?(int8_t)q.leader:-1;e.leader_generation=q.leader_generation;
     e.formation=(uint8_t)(support?5:sourceDefault(s.behavior,4));e.formation_slot=(uint8_t)at;e.formation_count=(uint8_t)minv(255,n);
-    e.formation_spacing=(uint16_t)spacing;e.formation_angle=(int16_t)(sourceDefault(s.behavior_parameter1_q8,0)*256/360);
+    e.formation_spacing=(uint16_t)spacing;
+    e.formation_angle=(int16_t)(s.behavior==1?clamp(sourceDefault(s.behavior_parameter1_q8,256)/256,1,64):(sourceDefault(s.behavior_parameter1_q8,0)*256/360));
     e.formation_delay=(uint16_t)minv(65535,sourceTicks(s.action_delay_ticks)*(q.follower_index+1));e.formation_break=(uint16_t)sourceTicks(s.break_delay_ticks);
     unsigned scale=256;for(unsigned r=0;r<ring;r++)scale=scale*(unsigned)clamp(sourceDefault(s.repeat_size_q8,256),64,512)/256;
     e.radius=(uint8_t)clamp(e.radius*(int)scale/256,2,64);e.damage_scale=linked?leader->damage_scale:256;e.treasure_scale=linked?leader->treasure_scale:256;
@@ -158,12 +170,12 @@ void Game::dynamicWaveSpawns() {
  for(unsigned i=0;i<SOURCE_ENEMY_COUNT;i++){const SourceEnemyInfo &info=sourceEnemyInfo((SourceEnemy)i,run_flags);if(sourceEnemyId((SourceEnemy)i)>=0&&wave>=info.min_wave)total+=info.weight_q8;}
  unsigned roll=range(total),selected=SE_INTERCEPTOR;
  for(unsigned i=0;i<SOURCE_ENEMY_COUNT;i++){const SourceEnemyInfo &info=sourceEnemyInfo((SourceEnemy)i,run_flags);if(sourceEnemyId((SourceEnemy)i)<0||wave<info.min_wave||!info.weight_q8)continue;if(roll<info.weight_q8){selected=i;break;}roll-=info.weight_q8;}
- const SourceEnemyInfo &info=sourceEnemyInfo((SourceEnemy)selected,run_flags);
- SourceSpawnSpec s=emptySourceSpec((SourceEnemy)selected);
+ SourceSpawnSpec specs[SOURCE_MAX_SPECS];
  unsigned first=range(65536),second=range(65536),variance=range(65536);
  uint32_t amount=sourceDynamicAmountQ16((SourceEnemy)selected,wave,run_flags,first,second,variance);
- s.count=clamp((int)((amount+32768)/65536),info.quantity_min,info.quantity_max);
- s.entry=0;s.spawn=0;next_wave=(uint16_t)sourceRecipeDelayTicks(&s,1,wave,run_flags,options.assist_mode);loadWaveSpawns(&s,1);wave_name_kind_=254;
+ unsigned count=sourceDynamicRecipe((SourceEnemy)selected,wave,run_flags,amount,random_,specs,SOURCE_MAX_SPECS);
+ next_wave=(uint16_t)sourceRecipeDelayTicks(specs,count,wave,run_flags,options.assist_mode);
+ loadWaveSpawns(specs,count);wave_name_kind_=254;
 }
 const char *Game::waveName() const {
  if(boss_index>=0&&enemies[boss_index].active)return enemy_types[enemies[boss_index].type].name;

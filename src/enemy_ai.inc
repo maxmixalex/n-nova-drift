@@ -23,6 +23,15 @@ void Game::followEnemyLeader(Enemy &e) {
  else if(e.formation==3){offset=(int)(slot/2+1)*spacing;angle=(uint8_t)(leader.angle+((slot&1)?64:-64));spacing=offset;}
  else {angle=(uint8_t)(leader.angle+128+((int)slot*2-(int)count+1)*12);}
  int32_t tx=wrap(leader.x+dirX(angle)*spacing,worldWidth()),ty=wrap(leader.y+dirY(angle)*spacing,worldHeight());
+ if(e.formation==1){
+  // Native rank-and-file width is round(followerCount^.45). Keep the
+  // rectangular ranks aligned with the leader, including through wrapping.
+  unsigned columns=(unsigned)clamp(e.formation_angle,1,64);
+  int across=((int)(slot%columns)*2-(int)columns+1)*spacing/2;
+  int behind=(int)(slot/columns+1)*spacing;
+  tx=wrap(leader.x-dirX(leader.angle)*behind+dirX((uint8_t)(leader.angle+64))*across,worldWidth());
+  ty=wrap(leader.y-dirY(leader.angle)*behind+dirY((uint8_t)(leader.angle+64))*across,worldHeight());
+ }
  int dx=delta(tx,e.x,worldWidth()),dy=delta(ty,e.y,worldHeight());
  e.vx=(e.vx*3+leader.vx+clamp(dx*FP/6,-4*FP,4*FP))/4;e.vy=(e.vy*3+leader.vy+clamp(dy*FP/6,-4*FP,4*FP))/4;
  e.x=wrap(e.x+e.vx,worldWidth());e.y=wrap(e.y+e.vy,worldHeight());

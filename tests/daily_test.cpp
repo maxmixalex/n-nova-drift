@@ -30,6 +30,14 @@ int main(){
   upgrades();
   for(unsigned tick=0;tick<900;tick++){g.player.invulnerable=65000;if(g.daily_egg_hull)g.daily_egg_hull=15000;GameInput in={};in.up=true;in.left=tick%100<30;in.fire=true;g.tick(in);upgrades();assert(g.validState());}
  }
+ setup(DAILY_TURBO,DAILY_CHOSEN);uint32_t fixed=g.checksum(),chosen_day=g.daily_day;
+ g.start(888);g.configureCareer(64,true);g.configureRun(RUN_DRAFT);g.configureDaily(chosen_day);assert(g.checksum()==fixed);
+ setup(DAILY_PURITY);g.frame=30000;assert(g.dailyCompletionBonus()==1000000);
+ setup(DAILY_TURBO);g.frame=30000;assert(g.dailyCompletionBonus()==500000);
+ setup(DAILY_BOSS_RUSH);g.frame=30000;assert(g.dailyCompletionBonus()==500000);
+ setup(DAILY_TURBO_ENDLESS);g.frame=30000;assert(!g.dailyCompletionBonus());
+ setup(DAILY_COSMIC_EGG);g.daily_egg_hull=7500;assert(g.dailyCompletionBonus()==500000);
+ g.daily_egg_hull=1;assert(g.dailyCompletionBonus()==67);
  setup(DAILY_COSMIC_EGG);g.state=Playing;g.damageDailyEgg(15000);assert(g.state==GameOver&&!g.victory&&!g.daily_egg_hull);
  setup(DAILY_BOSS_RUSH);g.next_wave=0;
  static const unsigned bosses[]={E_CERATOTITAN,E_SPITFIRE,E_STATION_OMEGA,E_DREADNOUGHT,E_SCION,E_DWELLER,E_WARBRINGER,E_CRUCIBLE,E_SERAPH,E_GLAUCUS,E_STAR_EATER};

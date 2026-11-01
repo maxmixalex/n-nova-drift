@@ -266,6 +266,7 @@ private:
     void updateCosmicObjects();
     bool updateDailyWaves();
     void updateDaily();
+    uint32_t dailyCompletionBonus() const;
     void damageDailyEgg(unsigned damage);
     int spawnCosmic(unsigned kind,int x,int y,uint8_t angle,unsigned delay=0);
     GameInput previous_;
@@ -308,6 +309,7 @@ private:
     int32_t playerDestination(int32_t coordinate,bool horizontal) const;
     void bonusLevels(unsigned count);
     void preventDeath();
+    void blinkBurst(int32_t x,int32_t y,int radius,int damage);
     void triggerLastStand();
     void queueChallenger();
     void updateChallenger();

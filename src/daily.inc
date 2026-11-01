@@ -15,6 +15,9 @@ unsigned Game::dailyModifierFor(uint32_t day) {
 }
 void Game::configureDaily(uint32_t day) {
  if(frame)return;
+ // Normal Draft setup may have generated offers before this mode overrides
+ // it. Its consumed random numbers must not change today's gear or waves.
+ seed=random_=dailySeedFor(day);wave_pattern_=(uint8_t)range(32);
  daily_day=day;daily_variant=(uint8_t)dailyVariantFor(day);daily_modifier=(uint8_t)dailyModifierFor(day);
  run_flags=(run_flags|RUN_DAILY)&~(RUN_DRAFT|RUN_ENDLESS|RUN_PRACTICE);
  wave=starting_wave=0;level=0;xp=0;xp_next=15;banked_upgrades=0;state=Playing;next_wave=1;
@@ -152,4 +155,17 @@ void Game::updateCosmicObjects() {
    if(c.hull<=0){c.active=0;emitEffect(c.x,c.y,FX_BURST,14,16,2);emitPickup(c.x,c.y,PICKUP_XP,c.kind==COSMIC_TRAIN_ENGINE?80:25);emitPickup(c.x,c.y,PICKUP_POWER,1+range(3));score=addSaturated(score,c.kind==COSMIC_TRAIN_ENGINE?5000:1000);}
   }
  }
+}
+
+uint32_t Game::dailyCompletionBonus() const {
+ if(!(run_flags&RUN_DAILY)||(run_flags&RUN_ENDLESS))return 0;
+ // setup 0x14057975d: dailyTimeBonus=1e12; dailyEggBonus=1e6.
+ // StarEaterController Step 0x140dd1bc8..1c51 scales Egg by surviving HP;
+ // 0x140dd2174..22e4 divides the time bonus by elapsed play milliseconds,
+ // halved for Turbo or Boss Rush. Fixed-step play time excludes menus.
+ if(daily(DAILY_COSMIC_EGG))return (uint32_t)((1000000ull*(unsigned)maxv(0,daily_egg_hull)+7500)/15000);
+ if(!frame)return 0;
+ uint64_t numerator=daily(DAILY_TURBO)||daily(DAILY_BOSS_RUSH)?15000000000ull:30000000000ull;
+ uint64_t bonus=(numerator+frame/2)/frame;
+ return bonus>UINT32_MAX?UINT32_MAX:(uint32_t)bonus;
 }

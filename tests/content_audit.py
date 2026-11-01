@@ -2,7 +2,8 @@
 
 The source descriptions establish mechanical identities, not numerical or
 byte-for-byte GameMaker runtime equivalence. Every active implementation is
-therefore classified as an adaptation. Source placeholders stay unavailable.
+therefore classified as an adaptation. Source placeholders stay unavailable;
+docs/content-audit-sources.md records their original pool and object evidence.
 """
 import argparse
 import csv
@@ -41,6 +42,7 @@ def audit(source=None):
             "intentional_empty": 1, "unavailable_placeholders": 2,
             "numeric_balance": "Uses extracted source constants and recovered native rules, with bounded TI-Nspire adaptations; this inventory alone does not establish frame-by-frame numerical equivalence",
             "runtime_parity": "Bounded native port informed by extracted constants and recovered PC control flow; it does not execute the original runtime or claim frame-by-frame parity",
+            "source_evidence": "docs/content-audit-sources.md",
             "mods": rows}
 
 

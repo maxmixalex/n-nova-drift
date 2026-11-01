@@ -57,7 +57,10 @@ Chinese. The audit covered **14,586 interface/content lookups**, including all
 daily variants and modifiers, with **zero missing keys or glyphs and zero
 unresolved numeric references**. It also resolved **282 registered runtime
 sprite references**: 65 enemies, 37 gear items and 180 mod offers, with zero
-missing or unreadable entries.
+missing or unreadable entries. These are the registered catalogue entries;
+the separate [full sprite audit](evidence/sprite-reference-audit.json) covers
+522 unique runtime names, also including effects, components and the ending.
+The two counts describe overlapping coverage and must not be added together.
 
 The native snapshot tool produces 58 views per language, 638 standard review
 images in total, plus the separate ending series. New daily date/rule/record,
@@ -65,6 +68,12 @@ control and audio pages were reviewed across all eleven languages. Font coverage
 is checked against the actual converted font packs, not merely against the CSV
 text. The source changelog remains English in every language, as supplied by
 the original game; every selected font can render it.
+
+The 180-title catalogue includes the original intentionally empty The Void and
+the unavailable source placeholders Havoc and Onslaught. Neither placeholder
+appears in the original playable wild-mod pools; their source descriptions and
+object routines define no effect. They remain unavailable rather than acquiring
+invented abilities. See [the source evidence](content-audit-sources.md).
 
 ## Platform differences
 

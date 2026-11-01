@@ -333,6 +333,8 @@ uint32_t sourceDynamicAmountQ16(SourceEnemy enemy,unsigned wave,uint16_t flags,
  return (uint32_t)(amount>0?amount:0);
 }
 
+#include "source_dynamic.inc"
+
 unsigned sourceEnemyDelayFrames(SourceEnemy enemy) {
  // Original setWaveDelay 0x14058b780, replayed for all 864 object IDs.
  static const uint16_t frames[SOURCE_ENEMY_COUNT]={0,90,60,150,240,16,0,0,240,180,420,640,180,48,480,640,900,700,1800,15000,670,90,400,3500,5200,60,18000,5200,5200,7500,15000,36000,36000,24000,32000,32000,32000,36000,36000,60,800,6000,6400};

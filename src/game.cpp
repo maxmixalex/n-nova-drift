@@ -241,7 +241,7 @@ bool Game::takeMod(unsigned id) {
  if(id==M_X_GRANDEUR)bonusLevels(1);
  if(id==M_X_POWER_SPIKE){rerolls=0;bonusLevels(5);}
  if(id==M_X_CHALLENGER)queueChallenger();
- if(id==M_X_HIDDEN_POWER){for(unsigned i=0;i<MAX_CONSTRUCTS;i++)constructs[i].active=0;burst_left_=burst_delay_=0;}
+ if(id==M_X_HIDDEN_POWER){for(unsigned i=0;i<MAX_CONSTRUCTS;i++)if(constructs[i].kind!=C_BASTION)constructs[i].active=0;burst_left_=burst_delay_=0;}
  recalculate();player.hull=minv(hullRecoveryCap(),player.hull+maxv(0,player.max_hull-oldh));
  player.shield=minv(shieldRecoveryCap(),player.shield+maxv(0,player.max_shield-olds));
  return true;
@@ -290,7 +290,7 @@ void Game::recalculate() {
  stats.projectiles+=m[M_X_TWIN_STRIKE];
  stats.plating+=2*m[M_X_DEFIANCE]+m[M_X_RANCOR];
  stats.damage+=5*m[M_X_RANCOR];
- stats.thrust=stats.thrust*(100+12*m[M_X_SLIPSTREAM]+10*m[M_X_EVOLUTIONARY_NICHE]+10*m[M_X_BRAVADO]+10*m[M_X_RANCOR]+5*m[M_X_HIDDEN_POWER])/100;
+ stats.thrust=stats.thrust*(100+12*m[M_X_SLIPSTREAM]+10*m[M_X_EVOLUTIONARY_NICHE]+10*m[M_X_BRAVADO]-10*m[M_X_RANCOR]+5*m[M_X_HIDDEN_POWER])/100;
  stats.turn+=m[M_X_SLIPSTREAM];
  stats.shield_effect+=30*m[M_X_TEMPEST_BREAK]+10*m[M_X_EVOLUTIONARY_NICHE]+10*m[M_X_BRAVADO];
  stats.shield_cooldown=stats.shield_cooldown*maxv(20,100-25*m[M_X_FLASH_SHIELDING]-5*m[M_X_ENERGIZED_SHIELDS]-30*m[M_X_TEMPEST_BREAK])/100;
@@ -584,14 +584,19 @@ void Game::updatePlayer(const GameInput &in) {
  if(in.pointer_valid){p.angle=toward(p.angle,direction(in.pointer_x*FP-p.x,in.pointer_y*FP-p.y),turn*2);}
  else {if(in.left)p.angle=(uint8_t)(p.angle-turn);if(in.right)p.angle=(uint8_t)(p.angle+turn);}
  p.thrusting=in.up||m[M_X_RAMPAGE];
- if(p.thrusting)aegis_clock_=0;else aegis_clock_=(uint8_t)minv(75,aegis_clock_+1);
+ // damageReduction: stillness gains 1/150 per source frame and loses .1
+ // while thrusting. Each fixed tick represents two source frames.
+ if(p.thrusting)aegis_clock_=aegis_clock_>15?aegis_clock_-15:0;else aegis_clock_=(uint8_t)minv(75,aegis_clock_+1);
  bool held=in.fire||in.pointer_down,previous_held=previous_.fire||previous_.pointer_down;
  if(auto_fire!=auto_fire_previous_){firing_latch_=false;auto_fire_previous_=auto_fire;}
  if(auto_fire&&held&&!previous_held)firing_latch_=!firing_latch_;
  p.firing=auto_fire?firing_latch_:held;
  if(m[M_OVERSEER]||m[M_X_HIDDEN_POWER]||daily(DAILY_SERPENTINE))p.firing=false;
 
- int thrust=stats.thrust;if(hasHyperboost())thrust=thrust*4/3;if(m[M_CHARGED_SHOT]&&!m[M_X_CHARGED_MINES]&&p.charge)thrust=thrust*80/100;if(m[M_X_RANCOR]&&p.charge)thrust=thrust*85/100;if(m[M_X_CHARGED_SHIELDS]&&p.charge)thrust=thrust*85/100;if(p.shield>0&&p.shield_type==S_AMP)thrust=thrust*125/100;
+ int thrust=stats.thrust;if(hasHyperboost())thrust=thrust*4/3;
+ // refreshWeapon 0x1404d6a43..6a85 applies one additive charge penalty.
+ if(p.charge){int penalty=(m[M_CHARGED_SHOT]&&!m[M_X_CHARGED_MINES]?20:0)+15*m[M_X_RANCOR]+15*m[M_X_CHARGED_SHIELDS];thrust=thrust*maxv(0,100-penalty)/100;}
+ if(p.shield>0&&p.shield_type==S_AMP)thrust=thrust*125/100;
  if(kill_buff_&&m[M_WARPATH])thrust+=20;
  if(p.firing&&(p.weapon==W_TORRENT||p.weapon==W_THERMAL_LANCE||p.weapon==W_VORTEX))thrust=thrust*80/100;
  if(p.thrusting){p.vx+=dirX(p.angle)*thrust/1400;p.vy+=dirY(p.angle)*thrust/1400;}
@@ -612,7 +617,7 @@ void Game::updatePlayer(const GameInput &in) {
   if(p.body==B_ARCHITECT){for(unsigned i=0;i<MAX_CONSTRUCTS;i++)if(constructs[i].active){blast(constructs[i].x,constructs[i].y,32,80*stats.construct_damage/100);constructs[i].active=0;}}
   uint8_t dash_angle=p.angle;
   if(m[M_X_STRAFE])dash_angle=(uint8_t)(p.angle+(in.down&&m[M_X_DISPLACEMENT]?128:in.left?-64:in.right?64:0));
-  if(m[M_BLINK]) {int travel=m[M_X_DISPLACEMENT]?84:65;int32_t ox=p.x,oy=p.y;p.x=playerDestination(p.x+dirX(dash_angle)*travel,true);p.y=playerDestination(p.y+dirY(dash_angle)*travel,false);if(!m[M_X_DISPLACEMENT]){blast(ox,oy,22,100);blast(p.x,p.y,22,100);}emitEffect(ox,oy,FX_WARP,25,12,3);
+  if(m[M_BLINK]) {int travel=m[M_X_DISPLACEMENT]?84:65;int32_t ox=p.x,oy=p.y;p.x=playerDestination(p.x+dirX(dash_angle)*travel,true);p.y=playerDestination(p.y+dirY(dash_angle)*travel,false);if(!m[M_X_DISPLACEMENT]){blinkBurst(ox,oy,22,100);blinkBurst(p.x,p.y,22,100);}emitEffect(ox,oy,FX_WARP,25,12,3);
    if(m[M_X_DISPLACEMENT]){emitEffect(ox,oy,FX_BEAM,5,12,3,ox+dirX(dash_angle)*travel,oy+dirY(dash_angle)*travel);for(unsigned e=0;e<MAX_ENEMIES+MAX_BOSS_PARTS;e++)if(targetSwept(e,ox,oy,p.x,p.y,5))damageTarget(e,1200+targetHull(e)*7/100);}}
   else {p.vx+=dirX(dash_angle)*3;p.vy+=dirY(dash_angle)*3;}
   dash_ticks_=12;
@@ -759,14 +764,22 @@ unsigned Game::incomingDamagePercent(bool shield,bool self) const {
  const uint8_t *m=player.mods;unsigned v=100;
  if(self){v=maxv(10,100-10*m[M_X_DEFIANCE]-15*m[M_X_MASOCHISM]);if(player.body==B_FIREFLY)v=v*85/100;if(m[M_CORE_SHIELDING])v=v*80/100;return v*incomingDamagePercent(shield,false)/100;}
  v=100+10*m[M_X_MASOCHISM]+2*m[M_X_FARSIGHT];if(m[M_X_SHIELDED_DRONES])v=v*90/100;
- if(m[M_AEGIS])v=v*(100-15*aegis_clock_/75)/100;
- if(m[M_ADAPTIVE_ARMOR])v=v*100/(100+armor_stacks_);
  if(m[M_X_TACTICAL_LINK]||m[M_X_FORMATION_RAMPART])for(unsigned i=0;i<MAX_CONSTRUCTS;i++)if(constructs[i].active&&distance2(player.x,player.y,constructs[i].x,constructs[i].y)<55*55){v=v*80/100;break;}
- if(shield){if(player.body==B_SENTINEL)v=v*90/100;if(m[M_OMNI_SHIELD])v=v*85/100;}else if(m[M_FORCE_ARMOR])v=v*90/100;
+ if(shield){if(player.body==B_SENTINEL)v=v*90/100;if(m[M_OMNI_SHIELD])v=(unsigned)maxv(0,(int)v-15);}else if(m[M_FORCE_ARMOR])v=v*90/100;
+ if(m[M_AEGIS])v=(unsigned)maxv(0,(int)v-15*aegis_clock_/75);
+ if(m[M_ADAPTIVE_ARMOR]){
+  // damageReduction 0x140160778..140160899: add 1-.99^stacks to DR.
+  // Round once to this API's whole-percent resolution; the bounded table
+  // avoids a floating-point power in the ARM damage path.
+  static const uint8_t resistance[]={0,1,2,3,4,5,6,7,8,9,10,10,11,12,13,14,15,16,17,17,18,19,20,21,21,22,23,24,25,25,26,27,28,28,29,30,30,31,32,32,33,34,34,35,36,36,37,38,38,39,39};
+  v=(unsigned)maxv(0,(int)v-resistance[minv(50,armor_stacks_)]);
+ }
  if(!shield&&player.shield_type==S_BASTION)v=(unsigned)maxv(0,(int)v-(int)bastionResistancePercent());
  // Source ArmorFragment base DR=.137755102; percentage damage API rounds it.
  if(source_armor_ticks_)v=(unsigned)maxv(0,(int)v-14);
  if(options.assist_mode)v=(unsigned)maxv(0,(int)v-15);
+ // initializeLoadout maxDR=.25; damageReduction clamps its base result.
+ v=(unsigned)maxv(25,v);
  if(dailyMod(DAILY_HURT))v=v*115/100;
  if(dailyMod(DAILY_VIOLENCE))v=v*130/100;
  if(daily(DAILY_SWORD))v=v*125/100;
@@ -774,7 +787,13 @@ unsigned Game::incomingDamagePercent(bool shield,bool self) const {
  return v;
 }
 int Game::weaponSpreadStep() const {
- const Player &p=player;const uint8_t *m=p.mods;int spread=weapons[p.weapon].spread;
+ const Player &p=player;const uint8_t *m=p.mods;
+ // assignBaseStats weaponSetSpread, in hundredths of a degree. In
+ // particular Dart/Vortex/Railgun do have spread when more shots are added.
+ // Keep the source's 1.45-degree Flak value until the final angle conversion.
+ // Pulse: 240/(pulseSecondaryProjectiles-1) = 240/11 degrees.
+ static const uint16_t source_spread[]={1000,1200,145,1200,800,1200,2000,2182,2400,1200,700,500,100};
+ int spread=source_spread[p.weapon];
  if(m[M_FOCUS_FIRE])spread=spread*60/100;
  if(m[M_CONVERGENCE])spread=spread*175/100;
  spread=spread*(100+20*m[M_VOLLEY]+15*m[M_FUSILLADE]+(p.body==B_BATTERY?50:0)+(p.body==B_COURSER?60:0))/100;
@@ -783,7 +802,7 @@ int Game::weaponSpreadStep() const {
  if(m[M_HOMING_STRIKE])spread=spread*110/100;
  if(p.body==B_ASSAULT)spread=spread*80/100;
  if(m[M_CALIBRATE])spread=spread*(100-calibration_/3)/100;
- return spread;
+ return maxv(1,(spread*256+18000)/36000);
 }
 unsigned Game::weaponSpreadArcDegrees() const {return (weaponProjectiles()-1)*weaponSpreadStep()*360/256;}
 unsigned Game::weaponCannons() const {return weaponProjectiles()>1&&(player.weapon==W_BLASTER||player.body==B_BATTERY||player.body==B_COURSER)?2u:1u;}
@@ -821,6 +840,7 @@ unsigned Game::weaponPeriodQ16(int rate) const {
 unsigned Game::weaponPeriodQ8(int rate) const {return maxv(1,(weaponPeriodQ16(rate)+128)/256);}
 unsigned Game::weaponRateMilli() const {return 1966080000u/weaponPeriodQ16(stats.fire_rate);}
 unsigned Game::weaponCooldownTicks() const {return (weaponPeriodQ16(stats.fire_rate)+65535)/65536;}
+#include "firing_array.inc"
 void Game::fireWeapon(unsigned projectile_override,bool construct_origin) {
  Player &p=player;const uint8_t *m=p.mods;const WeaponDef &w=weapons[p.weapon];
  uint8_t fire_angle=(uint8_t)(p.angle+(m[M_X_PROPULSIVE_MUNITIONS]?128:0));
@@ -874,7 +894,8 @@ void Game::fireWeapon(unsigned projectile_override,bool construct_origin) {
  } else if(p.weapon==W_THERMAL_LANCE){
   ordinary=false;unsigned thermal_y=maxv(100000,thermal_y_scale_);damage=(int)minv(2000000,(int64_t)damage*(thermal_y+rancor_scale_*2/5)/thermal_y);
   if(p.charge<24){
-   if(construct_origin||frame%6==0)emitBullet(p.x,p.y,(uint8_t)(fire_angle+(int)range(17)-8),4,maxv(1,damage/2),SHOT_SPARK,24,0,1);
+   if(construct_origin||frame%6==0){int spark=emitBullet(p.x,p.y,(uint8_t)(fire_angle+(int)range(17)-8),4,maxv(1,damage/2),SHOT_SPARK,24,0,1);
+    if(spark>=0&&m[M_FIRING_ARRAY])applyFiringArray(bullets[spark],500);}
   } else {
    int length=(int)minv(400,(int64_t)(55+p.charge/2)*(maxv(100000,thermal_x_scale_)+rancor_scale_)/maxv(100000,thermal_x_scale_));
    int32_t ex=wrap(p.x+dirX(fire_angle)*length,worldWidth()),ey=wrap(p.y+dirY(fire_angle)*length,worldHeight());
@@ -901,13 +922,11 @@ void Game::fireWeapon(unsigned projectile_override,bool construct_origin) {
    if(p.weapon==W_FLAK||p.weapon==W_SALVO)offset+=(int)range(9)-4;
    if(p.weapon==W_TORRENT)offset+=dirY((uint8_t)(frame*8))/30;
    uint8_t a=(uint8_t)(fire_angle+offset);
-   int shotdamage=damage;
-   int center=100-absn(i*2-(projectiles-1))*100/maxv(1,projectiles-1);
-   if(m[M_FIRING_ARRAY])shotdamage=damage*(100+20*center/100)/100;
+   unsigned array_position=firingArrayPosition(offset,(projectiles-1)*spread,(unsigned)projectiles);
    int32_t x=p.x+dirX(fire_angle)*(p.radius+3),y=p.y+dirY(fire_angle)*(p.radius+3);
    if(p.body==B_BATTERY||p.body==B_COURSER||p.weapon==W_BLASTER){int side=(i&1)?4:-4;x+=dirX((uint8_t)(fire_angle+64))*side;y+=dirY((uint8_t)(fire_angle+64))*side;}
-   int slot=emitBullet(x,y,a,speed,shotdamage,kind,w.life,0,radius);
-   if(slot>=0){Bullet &shot=bullets[slot];if(charge){shot.speed=(uint16_t)clamp((int)((uint64_t)speed*FP*charge_blast/1000000),1,64*FP);shot.vx=dirX(a)*shot.speed/FP;shot.vy=dirY(a)*shot.speed/FP;shot.blast=(uint8_t)minv(100,(uint64_t)shot.blast*charge_blast/1000000);shot.size_percent=(uint16_t)minv(65535,(uint64_t)shot.size_percent*charge_size_mod/1000000);}shot.vx=clamp(shot.vx+p.vx/3,-64*FP,64*FP);shot.vy=clamp(shot.vy+p.vy/3,-64*FP,64*FP);if(empowered)shot.blast=(uint8_t)minv(100,shot.blast*130/100);if(m[M_FIRING_ARRAY]){shot.blast=(uint8_t)(shot.blast*(100+20*center/100)/100);shot.radius=(uint8_t)maxv(1,radius*(70+60*center/100)/100);}}
+   int slot=emitBullet(x,y,a,speed,damage,kind,w.life,0,radius);
+   if(slot>=0){Bullet &shot=bullets[slot];if(charge){shot.speed=(uint16_t)clamp((int)((uint64_t)speed*FP*charge_blast/1000000),1,64*FP);shot.vx=dirX(a)*shot.speed/FP;shot.vy=dirY(a)*shot.speed/FP;shot.blast=(uint8_t)minv(100,(uint64_t)shot.blast*charge_blast/1000000);shot.size_percent=(uint16_t)minv(65535,(uint64_t)shot.size_percent*charge_size_mod/1000000);}shot.vx=clamp(shot.vx+p.vx/3,-64*FP,64*FP);shot.vy=clamp(shot.vy+p.vy/3,-64*FP,64*FP);if(empowered)shot.blast=(uint8_t)minv(100,shot.blast*130/100);if(m[M_FIRING_ARRAY])applyFiringArray(shot,array_position);}
   }
  }
  if(m[M_HOMING_STRIKE]&&p.weapon!=W_SWORDS&&p.weapon!=W_THERMAL_LANCE)fireHomingStrike(fire_angle,projectiles,speed,damage,w.life,radius);
@@ -964,6 +983,7 @@ void Game::damagePlayer(int amount,bool self_damage,int attacker_angle,bool cont
  Player &p=player;const uint8_t *m=p.mods;
  if(state!=Playing||amount<=0||p.hull<=0||(!self_damage&&p.invulnerable&&(!continuous||p.invulnerable>normal_hit_grace_)))return;
  int initial_hull=p.hull,initial_shield=p.shield;
+ const int original_damage=amount;
  if(!self_damage&&daily(DAILY_NOVA_BROTHERS)&&!daily_damage_redirect_){
   for(unsigned i=0;i<MAX_CONSTRUCTS;i++)if(constructs[i].active&&(constructs[i].kind==C_ALLY||constructs[i].kind==C_INTERCEPTOR||constructs[i].kind==C_GUARDIAN)){daily_damage_redirect_=1;damageConstruct(i,maxv(1,amount*40/100));daily_damage_redirect_=0;break;}
  }
@@ -979,7 +999,6 @@ void Game::damagePlayer(int amount,bool self_damage,int attacker_angle,bool cont
    if(m[M_X_GEMINI]){int direct=maxv(1,amount/2);p.hull=maxv(0,p.hull-direct);amount-=direct;}
 
    int absorbed=minv(p.shield,amount);p.shield-=absorbed;amount-=absorbed;
-   if(!m[M_X_TEMPEST_BREAK]||p.shield==0)p.shield_delay=stats.shield_cooldown;
    if(m[M_X_REFLEXIVE_SHIELDS])blast(p.x,p.y,stats.shield_radius,amount/2+4);
    if(m[M_X_GALVANIC_OUTBURST])for(unsigned j=0;j<(unsigned)(2+m[M_X_GALVANIC_OUTBURST]);j++){int n=emitBullet(p.x,p.y,(uint8_t)range(256),4,8*m[M_X_GALVANIC_OUTBURST],SHOT_SPARK,45);if(n>=0)bullets[n].homing=6;}
    if(p.shield==0)shieldBroken();
@@ -997,6 +1016,19 @@ void Game::damagePlayer(int amount,bool self_damage,int attacker_angle,bool cont
    }
 
    if(p.body==B_VIPER){for(unsigned i=0;i<7;i++){int s=emitBullet(p.x,p.y,(uint8_t)(i*256/7),4,12+level/2,SHOT_DART,42,0,2);if(s>=0)bullets[s].homing=4;}}
+  }
+  // triggerShield 0x140746e36..1407470a2 is called after enemy damage,
+  // including hits while the shield is empty. First hit starts a full timer;
+  // later hits add .03 * originalDamage * cooldown (.018 with Omni Shield).
+  // Tempest does not extend an active timer; Bastion has its own assembly.
+  if(p.max_shield>0&&p.shield_type!=S_BASTION){
+   unsigned full=(unsigned)maxv(0,stats.shield_cooldown);
+   if(!p.shield_delay)p.shield_delay=(uint16_t)full;
+   else if(!m[M_X_TEMPEST_BREAK]){
+    uint64_t added=(uint64_t)original_damage*full*(m[M_OMNI_SHIELD]?18:30);
+    added=(added+500)/1000;
+    p.shield_delay=(uint16_t)minv(full,p.shield_delay+(unsigned)(added>65535?65535:added));
+   }
   }
   if(!continuous){p.invulnerable=maxv(p.invulnerable,7);normal_hit_grace_=7;}damage_flash=18;
  }
@@ -1112,7 +1144,7 @@ void Game::destroyEnemy(unsigned index) {
   if(e.type==E_STAR_EATER&&!(run_flags&RUN_ENDLESS)){victory=true;state=GameOver;for(unsigned j=0;j<MAX_ENEMIES;j++)enemies[j].active=0;clearBytes(boss_parts,sizeof(boss_parts));for(unsigned j=0;j<MAX_BULLETS;j++)if(bullets[j].owner)bullets[j].active=0;}
  }
  if(dailyMod(DAILY_GRACE)&&range(5)==0)emitPickup(e.x,e.y,PICKUP_POWER,1+range(3));
- if(e.type==E_STAR_EATER&&daily(DAILY_COSMIC_EGG)&&daily_egg_hull>0)score=addSaturated(score,1000000);
+ if(e.type==E_STAR_EATER)score=addSaturated(score,dailyCompletionBonus());
  if(e.type==E_ASTEROID&&e.phase){
   static const uint16_t hull[]={10,60,240,720};static const uint8_t radii[]={4,8,13,19};
   unsigned children=3+range(3),phase=e.phase-1;

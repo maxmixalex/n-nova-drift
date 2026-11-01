@@ -1,0 +1,57 @@
+{
+  "version": "v2",
+  "launcher_sha256": "783a97d8fb7fb76b0f4efd3c497873c4a8a688926dfb166f1c5e605b7c287687",
+  "ordinary_snapshot_sha256": "75a5d685e5590aa062724b4512ad9b1923e80ca5155ca40b951ff4b0b441b818",
+  "scenes": {
+    "ordinary": {
+      "active_frames": 150,
+      "warmup_ms": 3698,
+      "fps": 30.108390204737052,
+      "render_median_ms": 4.0,
+      "render_max_ms": 65,
+      "frame_start": 253,
+      "frame_end": 402,
+      "save_sha256": "75a5d685e5590aa062724b4512ad9b1923e80ca5155ca40b951ff4b0b441b818"
+    },
+    "late": {
+      "active_frames": 449,
+      "warmup_ms": 3710,
+      "fps": 29.937324976663554,
+      "render_median_ms": 13,
+      "render_max_ms": 78,
+      "frame_start": 439,
+      "frame_end": 888,
+      "save_sha256": "ea48982fcec5616f70138a8b423781d116687e47145d290c3938ba6b17f4e1f1"
+    },
+    "heavy": {
+      "active_frames": 453,
+      "warmup_ms": 3662,
+      "fps": 30.177869562320964,
+      "render_median_ms": 31,
+      "render_max_ms": 91,
+      "frame_start": 95,
+      "frame_end": 544,
+      "save_sha256": "b3895b5e0b1a24b8c9d742c957a8c5ef53d91021ff0dd11f3f7fcdb74ac82473"
+    },
+    "effects": {
+      "active_frames": 450,
+      "warmup_ms": 3667,
+      "fps": 29.9540704253478,
+      "render_median_ms": 13.0,
+      "render_max_ms": 81,
+      "frame_start": 272,
+      "frame_end": 722,
+      "save_sha256": "f16629134f5b18fbda4eda73389d4ff606323acd7a99ec98c7afa7ac6c09466d"
+    },
+    "seraph": {
+      "active_frames": 451,
+      "warmup_ms": 3666,
+      "fps": 30.032629686355463,
+      "render_median_ms": 5,
+      "render_max_ms": 127,
+      "frame_start": 108,
+      "frame_end": 557,
+      "save_sha256": "f89133f0be708c564727119f0cd5aab144949aa9b865a1b0f1207c76aeb27196"
+    }
+  }
+}

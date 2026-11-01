@@ -1,0 +1,198 @@
+{
+  "source_executable_sha256": "6555f9f49c9b44f2a38dafc0846dd8af0e7e1f1e100cba976db60967b7173e2d",
+  "decision": "Keep Havoc and Onslaught unavailable: supplied source placeholders absent from playable wild pools; no defined gameplay effect to enable.",
+  "csv_evidence": {
+    "ModFullHavoc": "[$=*]...",
+    "ModFullOnslaught": "[$=*]..."
+  },
+  "native_routines": {
+    "gml_Object_mHavoc_Create_0": "0x1407cb3e0..0x1407cb468; sets alarm[0]=1",
+    "gml_Object_mHavoc_Alarm_0": "0x1407cb470..0x1407cb6f2; gainMod self registration, no implemented mechanical effect",
+    "gml_Object_mOnslaught_Create_0": "0x1407d9b60..0x1407d9be8; sets alarm[0]=1; no named Onslaught alarm routine"
+  },
+  "initial_wild_pools": {
+    "wildMods": {
+      "initialization_va": "0x140c791e2",
+      "objects": [
+        {
+          "object": "mEnergizedShields",
+          "reference_va": "0x140c79207"
+        },
+        {
+          "object": "mMasochism",
+          "reference_va": "0x140c79252"
+        },
+        {
+          "object": "mScorchingWake",
+          "reference_va": "0x140c7929d"
+        },
+        {
+          "object": "mSpecialist",
+          "reference_va": "0x140c792e8"
+        },
+        {
+          "object": "mHypermetabolism",
+          "reference_va": "0x140c79333"
+        },
+        {
+          "object": "mGalvanicOutburst",
+          "reference_va": "0x140c7937e"
+        },
+        {
+          "object": "mSlipstream",
+          "reference_va": "0x140c793c9"
+        },
+        {
+          "object": "mHeavyCaliber",
+          "reference_va": "0x140c79414"
+        },
+        {
+          "object": "mDoubleTap",
+          "reference_va": "0x140c79465"
+        },
+        {
+          "object": "mPolarInversion",
+          "reference_va": "0x140c794b6"
+        },
+        {
+          "object": "mPropulsiveMunitions",
+          "reference_va": "0x140c79507"
+        },
+        {
+          "object": "mSolarHeart",
+          "reference_va": "0x140c79558"
+        },
+        {
+          "object": "mRampage",
+          "reference_va": "0x140c795a9"
+        },
+        {
+          "object": "mDefiance",
+          "reference_va": "0x140c795fa"
+        }
+      ]
+    },
+    "wildModsRare": {
+      "initialization_va": "0x140c796b3",
+      "objects": [
+        {
+          "object": "mEvolutionaryNiche",
+          "reference_va": "0x140c796d8"
+        },
+        {
+          "object": "mBravado",
+          "reference_va": "0x140c79723"
+        },
+        {
+          "object": "mChaoticAmbition",
+          "reference_va": "0x140c7976e"
+        },
+        {
+          "object": "mObsession",
+          "reference_va": "0x140c797b9"
+        },
+        {
+          "object": "mOutrageModule",
+          "reference_va": "0x140c79804"
+        },
+        {
+          "object": "mPhantomStrike",
+          "reference_va": "0x140c7984f"
+        },
+        {
+          "object": "mTransmogrification",
+          "reference_va": "0x140c7989a"
+        },
+        {
+          "object": "mDeathBlossom",
+          "reference_va": "0x140c798e5"
+        },
+        {
+          "object": "mWinnow",
+          "reference_va": "0x140c79936"
+        },
+        {
+          "object": "mRevelation",
+          "reference_va": "0x140c79987"
+        },
+        {
+          "object": "mDiscord",
+          "reference_va": "0x140c799d8"
+        },
+        {
+          "object": "mSpontaneousGeneration",
+          "reference_va": "0x140c79a29"
+        }
+      ]
+    },
+    "wildModsVeryRare": {
+      "initialization_va": "0x140c79ae2",
+      "objects": [
+        {
+          "object": "mFarsight",
+          "reference_va": "0x140c79b07"
+        },
+        {
+          "object": "mGrandeur",
+          "reference_va": "0x140c79b52"
+        },
+        {
+          "object": "mTwinStrike",
+          "reference_va": "0x140c79b9d"
+        },
+        {
+          "object": "mExplosiveGrowth",
+          "reference_va": "0x140c79be8"
+        },
+        {
+          "object": "mQuantumDecoherence",
+          "reference_va": "0x140c79c33"
+        },
+        {
+          "object": "mMaelstrom",
+          "reference_va": "0x140c79c7e"
+        },
+        {
+          "object": "mRicochet",
+          "reference_va": "0x140c79cc9"
+        },
+        {
+          "object": "mChallenger",
+          "reference_va": "0x140c79d14"
+        }
+      ]
+    }
+  },
+  "typed_object_references": {
+    "mHavoc": {
+      "object_id": 117,
+      "typed_references": [
+        [
+          "0x1407cb540",
+          "gml_Object_mHavoc_Alarm_0"
+        ]
+      ]
+    },
+    "mOnslaught": {
+      "object_id": 148,
+      "typed_references": []
+    }
+  },
+  "constant_occurrences": {
+    "mHavoc": {
+      "constant_occurrences": [
+        "0x1407cb540"
+      ],
+      "rip_references": []
+    },
+    "mOnslaught": {
+      "constant_occurrences": [],
+      "rip_references": []
+    }
+  },
+  "additional_checked_routines": [
+    "gml_Script_updateConditionalMods",
+    "gml_Script_updateModPools",
+    "gml_Script_rollWild"
+  ]
+}

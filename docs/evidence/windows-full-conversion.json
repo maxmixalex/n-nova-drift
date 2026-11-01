@@ -1,0 +1,142 @@
+{
+  "converter": "build/release/converter.exe",
+  "source": "user supplied original game folder",
+  "verified": true,
+  "packs": 22,
+  "bytes": 7579988,
+  "all_identical": true,
+  "files": [
+    {
+      "file": "nNova.changelog.dat.tns",
+      "bytes": 55698,
+      "sha256": "6b00360b5032f16aa39e913b9d376d6bf634a5d526ab84e3680dfce0f7b34a2b",
+      "identical": true
+    },
+    {
+      "file": "nNova.dat.tns",
+      "bytes": 181136,
+      "sha256": "529051444f30455aeb0f8b9bb60f3bb4bced8c2a12d31d1d7eb7b4fec914287e",
+      "identical": true
+    },
+    {
+      "file": "nNova.deu.locale.dat.tns",
+      "bytes": 93946,
+      "sha256": "005f140fd90b641af6404fa699e19464a3f1381e614d5d2d7a30ff722a5b41db",
+      "identical": true
+    },
+    {
+      "file": "nNova.eng.locale.dat.tns",
+      "bytes": 85488,
+      "sha256": "f73ca63b07743079c5cd6f9fcfb689c6ef8301dfb85ed0689ebda4c869ec3501",
+      "identical": true
+    },
+    {
+      "file": "nNova.fra.locale.dat.tns",
+      "bytes": 99539,
+      "sha256": "2e2eb41593b45d15a8734fc8de776095436bd99f6a087692136b6c6168141692",
+      "identical": true
+    },
+    {
+      "file": "nNova.gfx00.dat.tns",
+      "bytes": 2095957,
+      "sha256": "9c61a97024f92c35d8e29ea839aa407b1dff6a41cc8de496634666fec6d933d1",
+      "identical": true
+    },
+    {
+      "file": "nNova.gfx01.dat.tns",
+      "bytes": 2094352,
+      "sha256": "137efa7a4dc9cfec3e9658505365ed8f622433040a12bc5eb38cdf4ea1f142db",
+      "identical": true
+    },
+    {
+      "file": "nNova.gfx02.dat.tns",
+      "bytes": 1496836,
+      "sha256": "8f389803c7841f3b3ff8c6b39cc4be7b365996fbce020dddf529a6edf1e45e6d",
+      "identical": true
+    },
+    {
+      "file": "nNova.jpn.font.dat.tns",
+      "bytes": 128862,
+      "sha256": "99b655b00268c620ca4630b8576300647cde6203eaa76518bef1aec0f0fd7287",
+      "identical": true
+    },
+    {
+      "file": "nNova.jpn.locale.dat.tns",
+      "bytes": 87831,
+      "sha256": "f686bf9492a4ca2a38e6cd2a7b8a3fef6b6a9b8f766d17e05beffe0ece47ff64",
+      "identical": true
+    },
+    {
+      "file": "nNova.kor.font.dat.tns",
+      "bytes": 87447,
+      "sha256": "fb0f341810b1a0fc9ad0629fc9ee6f662f80f49daff030c6ab94523d5741f39d",
+      "identical": true
+    },
+    {
+      "file": "nNova.kor.locale.dat.tns",
+      "bytes": 93694,
+      "sha256": "8919bdf1a36760b2256a56ad9f0d8a6583993a4a126f9c40e6b9f6b12e153407",
+      "identical": true
+    },
+    {
+      "file": "nNova.lat.font.dat.tns",
+      "bytes": 15067,
+      "sha256": "34f16d0b5d64ee230695d321db3cb4fe247e004b120199332a1ad013995f4ef2",
+      "identical": true
+    },
+    {
+      "file": "nNova.pol.locale.dat.tns",
+      "bytes": 97965,
+      "sha256": "d5d280a96472d1a0fa5bf9535b5945ebb5a6a3bb2440f6b4305d7248b8b29a70",
+      "identical": true
+    },
+    {
+      "file": "nNova.por.locale.dat.tns",
+      "bytes": 96046,
+      "sha256": "437ecf79bdf500bc39d44b7d8518a722fe4ed220404291039b54231a998fc725",
+      "identical": true
+    },
+    {
+      "file": "nNova.rus.locale.dat.tns",
+      "bytes": 110791,
+      "sha256": "2da0ddc2be8826a04b4aa0e8b12ca7701c1b8747ad5e1ace08285359fecaa6f6",
+      "identical": true
+    },
+    {
+      "file": "nNova.skins.dat.tns",
+      "bytes": 26145,
+      "sha256": "398adf704fe8c8110a6b6dcd6025aaa0431be061a3e6e18be825c188060c5012",
+      "identical": true
+    },
+    {
+      "file": "nNova.spa.locale.dat.tns",
+      "bytes": 96287,
+      "sha256": "d34ba0f0a28db830cdc771bb80a8547c8d2e160970f5b1aecba8984affb713e3",
+      "identical": true
+    },
+    {
+      "file": "nNova.zhs.font.dat.tns",
+      "bytes": 183599,
+      "sha256": "8da9ffc3fb270426cdb2eafee6237062fce6f76bda3358a8185c312805645c99",
+      "identical": true
+    },
+    {
+      "file": "nNova.zhs.locale.dat.tns",
+      "bytes": 80929,
+      "sha256": "030c113dfc7ec367e8d1abeb231065298e106c94c354b6484a7994fbdc93af9b",
+      "identical": true
+    },
+    {
+      "file": "nNova.zht.font.dat.tns",
+      "bytes": 187395,
+      "sha256": "53932ebe783d433750a81fe3739b333f54aabf9243c0213713e7509fa188458f",
+      "identical": true
+    },
+    {
+      "file": "nNova.zht.locale.dat.tns",
+      "bytes": 84978,
+      "sha256": "57549d76724e4b64a696767aa997ed0cddd2d35bb2ae3bae55509ffc5b88bc0a",
+      "identical": true
+    }
+  ]
+}

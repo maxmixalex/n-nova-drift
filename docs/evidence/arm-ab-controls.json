@@ -1,0 +1,10 @@
+{
+  "same_final_arm_binary": true,
+  "same_initial_game_snapshots": true,
+  "all_18_non_graphics_packs_from_final_v3_in_both_runs": true,
+  "v2_graphics_bytes": 7532875,
+  "v3_graphics_bytes": 5868281,
+  "graphics_saved_bytes": 1664594,
+  "complete_v2_candidate_bytes": 9250199,
+  "final_v3_bytes": 7579988
+}

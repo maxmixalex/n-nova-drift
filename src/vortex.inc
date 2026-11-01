@@ -130,9 +130,13 @@ void Game::releaseVortex(unsigned projectile_override,bool construct_origin) {
  if(p.body==B_SPECTRE)damage=(int)((int64_t)damage*(100+p.cloak*3*(int)bodyPowerPercent()/180)/100);
  int speed=maxv(1,weapons[W_VORTEX].speed*stats.velocity/100),spread=weaponSpreadStep();
  for(unsigned j=0;j<count;j++){
-  uint8_t angle=(uint8_t)(p.angle+((int)j*2-(int)count+1)*spread/2);
-  int slot=emitBullet(p.x,p.y,angle,speed,damage,SHOT_VORTEX,65535,0,(unsigned)minv(100,(uint64_t)scale*21/1000000));if(slot<0)continue;
-  Bullet &b=bullets[slot];b.field_scale=scale;b.bounces=(uint8_t)minv(255,count+2*p.mods[M_BURST_FIRE]+p.mods[M_X_DOUBLE_TAP]);b.homing=(uint8_t)stats.homing;b.pierce=255;b.blast=0;b.wraps=255;b.size_percent=(uint16_t)minv(65535,scale/10000);
+  int offset=((int)j*2-(int)count+1)*spread/2;
+  uint8_t angle=(uint8_t)(p.angle+offset);unsigned shot_scale=scale;
+  if(p.mods[M_FIRING_ARRAY])shot_scale=(unsigned)minv(VORTEX_SCALE_LIMIT,(uint64_t)scale*firingArraySize(firingArrayPosition(offset,(int)(count-1)*spread,count))/1000);
+  // oVortex Step recomputes damage from baseDamage and its physical scale.
+  // Change that scale, without multiplying baseDamage a second time.
+  int slot=emitBullet(p.x,p.y,angle,speed,damage,SHOT_VORTEX,65535,0,(unsigned)minv(100,(uint64_t)shot_scale*21/1000000));if(slot<0)continue;
+  Bullet &b=bullets[slot];b.field_scale=shot_scale;b.bounces=(uint8_t)minv(255,count+2*p.mods[M_BURST_FIRE]+p.mods[M_X_DOUBLE_TAP]);b.homing=(uint8_t)stats.homing;b.pierce=255;b.blast=0;b.wraps=255;b.size_percent=(uint16_t)minv(65535,shot_scale/10000);
  }
  if(!construct_origin&&p.mods[M_HOMING_STRIKE])fireHomingStrike(p.angle,(int)count,speed,damage,65535,(int)minv(100,(uint64_t)scale*21/1000000));
  p.charge=0;vortex_rate_=12375000;vortex_growth_fraction_=0;vortex_cost_fraction_=0;

@@ -30,16 +30,18 @@ the owner's original fonts. It is taken from
 [nothings/stb](https://github.com/nothings/stb) commit
 `f0569113c93ad095470c54bf34a17b36646bbbb5` and used under its MIT option.
 The complete notice is
-[STB-LICENSE.txt](tools/converter/third_party/STB-LICENSE.txt).
+[STB-LICENSE.txt](https://github.com/maxmixalex/n-nova-drift/blob/main/tools/converter/third_party/STB-LICENSE.txt).
 The header is not compiled into the calculator launcher.
 
 The Windows x64 executable is built with
 [LLVM-MinGW 20261020](https://github.com/mstorsjo/llvm-mingw/releases/tag/20261020)
 (LLVM 23.1.4) and statically links its C++ runtime. Binary distributions must
-include [LLVM-LICENSE.txt](tools/converter/third_party/LLVM-LICENSE.txt) and
-[MINGW-RUNTIME-LICENSE.txt](tools/converter/third_party/MINGW-RUNTIME-LICENSE.txt),
+include [LLVM-LICENSE.txt](https://github.com/maxmixalex/n-nova-drift/blob/main/tools/converter/third_party/LLVM-LICENSE.txt) and
+[MINGW-RUNTIME-LICENSE.txt](https://github.com/maxmixalex/n-nova-drift/blob/main/tools/converter/third_party/MINGW-RUNTIME-LICENSE.txt),
 along with the stb notice above. Additional details are recorded in the
-[converter third-party notice](tools/converter/third_party/NOTICE.md).
+[converter third-party notice](https://github.com/maxmixalex/n-nova-drift/blob/main/tools/converter/third_party/NOTICE.md).
+In the release ZIP, these four files are available locally in
+`converter/third_party/` alongside the desktop converter, with the same filenames.
 
 ## Converted fonts
 

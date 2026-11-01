@@ -37,6 +37,25 @@ uint32_t fieldDistance(int32_t dx,int32_t dy) {
  return isqrt32(x*x+y*y)<<shift;
 }
 }
+void Game::blinkBurst(int32_t x,int32_t y,int radius,int damage) {
+ // playerBlink creates spawnBurstGrowDamaging with knockBack=damage;
+ // burstHitsSolid uses the same (.125*damage*resistance)^.7 impulse as
+ // the other damaging bursts. Keep endpoint conversion in one place.
+ blast(x,y,radius,damage);
+ uint64_t pushed=0;
+ for(unsigned target=0;target<MAX_ENEMIES+MAX_BOSS_PARTS;target++){
+  if(!targetActive((int)target)||!targetInRadius((int)target,x,y,(unsigned)radius))continue;
+  unsigned owner=targetOwner((int)target);uint64_t bit=uint64_t(1)<<owner;
+  if(pushed&bit)continue;
+  pushed|=bit;Enemy &enemy=enemies[owner];
+  uint64_t input=(uint64_t)damage*fieldResistance(enemy)*65536/(8ull*1000);
+  uint64_t speed=fieldPowerSevenTenths(input)/(3*256);
+  if(speed>64*FP)speed=64*FP;
+  uint8_t angle=direction(delta(targetX((int)target),x,worldWidth()),delta(targetY((int)target),y,worldHeight()));
+  enemy.vx=clamp(enemy.vx+dirX(angle)*(int)speed/FP,-64*FP,64*FP);
+  enemy.vy=clamp(enemy.vy+dirY(angle)*(int)speed/FP,-64*FP,64*FP);
+ }
+}
 void Game::triggerBurnout(const Construct &dead,int damage,int radius) {
  unsigned slot=MAX_PERSISTENT_FIELDS;
  for(unsigned i=0;i<MAX_PERSISTENT_FIELDS;i++)if(!persistent_fields[i].active){slot=i;break;}
