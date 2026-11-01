@@ -38,16 +38,9 @@ static void require(bool condition, const std::string& message) {
     if (!condition) throw std::runtime_error(message);
 }
 static fs::path input_path(const char* text) {
-#ifdef _WIN32
-    // Narrow argv follows the Windows process code page, not necessarily UTF-8.
-    int size=MultiByteToWideChar(CP_ACP,0,text,-1,nullptr,0);
-    require(size>0,"Cannot decode command-line path");
-    std::wstring wide(size,L'\0');
-    require(MultiByteToWideChar(CP_ACP,0,text,-1,wide.data(),size)>0,"Cannot decode command-line path");
-    wide.pop_back();return fs::path(wide);
-#else
+    // Windows main reconstructs arguments from the original UTF-16 command
+    // line; both platforms therefore reach this boundary with UTF-8 paths.
     return fs::u8path(text);
-#endif
 }
 static fs::path executable_path(const char* argv0) {
 #ifdef _WIN32
@@ -63,18 +56,18 @@ static fs::path executable_path(const char* argv0) {
 }
 static Bytes read_file(const fs::path& path) {
     std::ifstream file(path, std::ios::binary | std::ios::ate);
-    require(bool(file), "Cannot open " + path.string());
+    require(bool(file), "Cannot open " + path.u8string());
     auto n = file.tellg();
-    require(n >= 0 && uint64_t(n) < 0x80000000ull, "File is too large: " + path.string());
+    require(n >= 0 && uint64_t(n) < 0x80000000ull, "File is too large: " + path.u8string());
     Bytes bytes(static_cast<size_t>(n)); file.seekg(0);
     if (!bytes.empty()) file.read(reinterpret_cast<char*>(bytes.data()), n);
-    require(bool(file), "Cannot read " + path.string()); return bytes;
+    require(bool(file), "Cannot read " + path.u8string()); return bytes;
 }
 static void write_file(const fs::path& path, const Bytes& bytes) {
     std::ofstream file(path, std::ios::binary | std::ios::trunc);
-    require(bool(file), "Cannot create " + path.string());
+    require(bool(file), "Cannot create " + path.u8string());
     file.write(reinterpret_cast<const char*>(bytes.data()), std::streamsize(bytes.size()));
-    require(bool(file), "Cannot finish " + path.string());
+    require(bool(file), "Cannot finish " + path.u8string());
 }
 template<class T> static void append(Bytes& b, const T& value) {
     const auto* p = reinterpret_cast<const uint8_t*>(&value); b.insert(b.end(), p, p + sizeof(value));
@@ -290,10 +283,10 @@ struct GlyphRecord {uint32_t codepoint,offset;uint16_t width,height;int16_t bear
 static_assert(sizeof(FontHeader)==36&&sizeof(GlyphRecord)==20,"Font layout");
 static unsigned write_font(const fs::path&font_path,const Bytes&locale,const fs::path&out) {
     Bytes data=read_file(font_path);stbtt_fontinfo info{};int offset=stbtt_GetFontOffsetForIndex(data.data(),0);
-    require(offset>=0&&stbtt_InitFont(&info,data.data(),offset),"Cannot initialize original game font: "+font_path.string());
+    require(offset>=0&&stbtt_InitFont(&info,data.data(),offset),"Cannot initialize original game font: "+font_path.u8string());
     auto points=codepoints(locale);
     // Native calculator UI has a few words absent from the original PC CSV.
-    if(out.filename().string().find(".zhs.")!=std::string::npos) {
+    if(out.filename().u8string().find(".zhs.")!=std::string::npos) {
         const std::string extra=NativeUiGlyphs;
         auto added=codepoints(Bytes(extra.begin(),extra.end()));points.insert(added.begin(),added.end());
     }
@@ -303,7 +296,7 @@ static unsigned write_font(const fs::path&font_path,const Bytes&locale,const fs:
     for(uint32_t cp:points){int glyph=stbtt_FindGlyphIndex(&info,int(cp));if(!glyph)glyph=stbtt_FindGlyphIndex(&info,'?');int w,h,x,y,advance,bearing;stbtt_GetGlyphHMetrics(&info,glyph,&advance,&bearing);unsigned char*bitmap=stbtt_GetGlyphBitmap(&info,scale,scale,glyph,&w,&h,&x,&y);
         require(w>=0&&h>=0&&w<256&&h<256,"Unexpected font glyph size");GlyphRecord g{cp,base+uint32_t(pixels.size()),uint16_t(w),uint16_t(h),int16_t(x),int16_t(-y),int16_t(std::max(1,int(std::lround(advance*scale)))),0};records.push_back(g);if(w&&h){require(bitmap,"Font rasterization failed");pixels.insert(pixels.end(),bitmap,bitmap+w*h);}stbtt_FreeBitmap(bitmap,nullptr);}
     FontHeader header{};std::memcpy(header.magic,"NNOVAF1\0",8);header.version=1;header.count=uint32_t(records.size());header.pixel_height=12;header.line_height=14;header.records_offset=sizeof(header);header.pixels_offset=base;header.file_bytes=base+uint32_t(pixels.size());
-    Bytes file;append(file,header);for(const auto&g:records)append(file,g);file.insert(file.end(),pixels.begin(),pixels.end());require(file.size()<=1048576,"Font exceeds 1 MiB cache");write_file(out,file);std::cout<<"  "<<out.filename().string()<<": "<<records.size()<<" glyphs, "<<file.size()<<" bytes\n";return unsigned(records.size());
+    Bytes file;append(file,header);for(const auto&g:records)append(file,g);file.insert(file.end(),pixels.begin(),pixels.end());require(file.size()<=1048576,"Font exceeds 1 MiB cache");write_file(out,file);std::cout<<"  "<<out.filename().u8string()<<": "<<records.size()<<" glyphs, "<<file.size()<<" bytes\n";return unsigned(records.size());
 }
 static std::vector<std::vector<std::string>> parse_csv(const Bytes&b){std::vector<std::vector<std::string>>rows;std::vector<std::string>row;std::string cell;bool quoted=false;size_t p=(b.size()>=3&&b[0]==239&&b[1]==187&&b[2]==191)?3:0;
     for(;p<b.size();++p){char c=char(b[p]);if(c=='"'){if(quoted&&p+1<b.size()&&b[p+1]=='"'){cell+='"';++p;}else quoted=!quoted;}else if(c==','&&!quoted){row.push_back(cell);cell.clear();}else if((c=='\n'||c=='\r')&&!quoted){if(c=='\r'&&p+1<b.size()&&b[p+1]=='\n')++p;row.push_back(cell);cell.clear();rows.push_back(row);row.clear();}else cell+=c;}
@@ -332,7 +325,7 @@ static void verify_pack(const fs::path&dir) {
     for(unsigned i=0;i<h.pack_count;++i){char name[64];std::snprintf(name,sizeof(name),"nNova.gfx%02u.dat.tns",i);Bytes b=read_file(dir/name);auto p=object_at<pack::DataHeader>(b,0);require(std::memcmp(p.magic,"NNOVAP1\0",8)==0&&p.version==pack::Version&&p.index==i&&p.file_bytes==b.size()&&b.size()<=PackWriter::Limit,"Invalid graphics pack header");require(p.payload_crc32==crc32(b.data()+sizeof(p),b.size()-sizeof(p)),"Graphics pack CRC mismatch");packs.push_back(std::move(b));}
     for(unsigned i=0;i<h.frame_count;++i){auto f=object_at<pack::FrameRecord>(index,h.frame_offset+i*sizeof(pack::FrameRecord));require(f.pack<packs.size()&&f.width&&f.height&&f.width<=320&&f.height<=240&&f.canvas_width&&f.canvas_height,"Invalid frame geometry");require(f.decoded_bytes==uint32_t(f.width)*f.height*3&&f.codec<=pack::Rle565A8,"Invalid frame codec/size");const Bytes&b=packs[f.pack];require(f.offset>=sizeof(pack::DataHeader)&&f.offset<=b.size()&&f.stored_bytes<=b.size()-f.offset,"Frame points outside graphics pack");Bytes payload(b.begin()+f.offset,b.begin()+f.offset+f.stored_bytes);if(f.codec==pack::Raw565A8)require(payload.size()==f.decoded_bytes,"Raw pixel length mismatch");else decode_rle(payload,f.decoded_bytes);}
     unsigned fonts=0,languages=0;
-    for(const auto&entry:fs::directory_iterator(dir)){std::string n=entry.path().filename().string();
+    for(const auto&entry:fs::directory_iterator(dir)){std::string n=entry.path().filename().u8string();
         if(has(n,".font.dat.tns")){Bytes b=read_file(entry.path());auto f=object_at<FontHeader>(b,0);require(std::memcmp(f.magic,"NNOVAF1\0",8)==0&&f.version==1&&f.count<=8192&&f.records_offset==sizeof(f)&&f.pixels_offset==f.records_offset+f.count*sizeof(GlyphRecord)&&f.file_bytes==b.size()&&f.file_bytes<=1048576,"Invalid font pack");uint32_t last=0;
             for(unsigned i=0;i<f.count;++i){auto g=object_at<GlyphRecord>(b,f.records_offset+i*sizeof(GlyphRecord));require((!i||g.codepoint>last)&&g.offset>=f.pixels_offset&&g.offset<=b.size()&&uint64_t(g.width)*g.height<=b.size()-g.offset,"Invalid glyph record");last=g.codepoint;}++fonts;
         }else if(has(n,".locale.dat.tns")){Bytes b=read_file(entry.path());Reader r{b};auto t=object_at<TextHeader>(b,0);require(std::memcmp(t.magic,"NNOVAL1\0",8)==0&&t.version==1&&t.count<=65536&&t.records_offset==sizeof(t)&&t.strings_offset==t.records_offset+t.count*sizeof(TextRecord)&&t.file_bytes==b.size(),"Invalid locale pack");std::string previous_key;
@@ -351,13 +344,13 @@ static void self_test() {
     std::cout<<"Self-test passed: "<<cases<<" codec patterns, malformed streams, CRC and CSV quoting.\n";
 }
 struct Options {fs::path source=".",output;bool verify=false,all_locales=false;unsigned compact=0;};
-static Options options(int argc,char**argv){Options o;bool source=false;for(int i=1;i<argc;++i){std::string a=argv[i];if(a=="--help"||a=="-h"){std::cout<<"nNova converter - run beside your own Nova Drift data.win\n\nUsage: converter [GAME_DIRECTORY] [--output DIRECTORY] [--verify]\n                 [--all-locales] [--compact-animation MAX_FRAMES]\n\nDefault output: GAME_DIRECTORY/nNova/data\nNo source argument: find data.win in CWD, then beside this executable.\nDefault languages: English and Simplified Chinese.\nDefault conversion preserves every animation frame.\nAlso: converter --verify-pack DIRECTORY | converter --self-test\nNo Python, GameMaker runner, network, or game executable is needed.\n";std::exit(0);}else if(a=="--output"){require(++i<argc,"--output needs a directory");o.output=input_path(argv[i]);}else if(a=="--verify")o.verify=true;else if(a=="--all-locales")o.all_locales=true;else if(a=="--full-animation")o.compact=0;else if(a=="--compact-animation"){require(++i<argc,"--compact-animation needs a frame limit");o.compact=unsigned(std::stoul(argv[i]));require(o.compact>=2&&o.compact<=4096,"Frame limit must be 2..4096");}else if(!a.empty()&&a[0]=='-')throw std::runtime_error("Unknown option: "+a);else{require(!source,"Only one game directory is accepted");o.source=fs::u8path(a);source=true;}}if(!source&&!fs::is_regular_file(o.source/"data.win")){fs::path beside=executable_path(argv[0]).parent_path();if(fs::is_regular_file(beside/"data.win"))o.source=beside;}if(o.output.empty())o.output=o.source/"nNova"/"data";return o;}
+static Options options(int argc,char**argv){Options o;bool source=false;for(int i=1;i<argc;++i){std::string a=argv[i];if(a=="--help"||a=="-h"){std::cout<<"nNova converter - run beside your own Nova Drift data.win\n\nUsage: converter [GAME_DIRECTORY] [--output DIRECTORY] [--verify]\n                 [--all-locales] [--compact-animation MAX_FRAMES]\n\nDefault output: GAME_DIRECTORY/nNova/data\nNo source argument: find data.win in CWD, then beside this executable.\nDefault languages: English and Simplified Chinese.\nDefault conversion preserves every animation frame.\nAlso: converter --verify-pack DIRECTORY | converter --self-test\nNo Python, GameMaker runner, network, or game executable is needed.\n";std::exit(0);}else if(a=="--output"){require(++i<argc,"--output needs a directory");o.output=input_path(argv[i]);}else if(a=="--verify")o.verify=true;else if(a=="--all-locales")o.all_locales=true;else if(a=="--full-animation")o.compact=0;else if(a=="--compact-animation"){require(++i<argc,"--compact-animation needs a frame limit");o.compact=unsigned(std::stoul(argv[i]));require(o.compact>=2&&o.compact<=4096,"Frame limit must be 2..4096");}else if(!a.empty()&&a[0]=='-')throw std::runtime_error("Unknown option: "+a);else{require(!source,"Only one game directory is accepted");o.source=input_path(argv[i]);source=true;}}if(!source&&!fs::is_regular_file(o.source/"data.win")){fs::path beside=executable_path(argv[0]).parent_path();if(fs::is_regular_file(beside/"data.win"))o.source=beside;}if(o.output.empty())o.output=o.source/"nNova"/"data";return o;}
 
-int main(int argc,char**argv)try {
+static int convert_main(int argc,char**argv)try {
     if(argc==2&&std::string(argv[1])=="--self-test"){self_test();return 0;}
     if(argc==3&&std::string(argv[1])=="--verify-pack"){verify_pack(input_path(argv[2]));return 0;}
     const Options opt=options(argc,argv);const uint16_t endian=1;require(*reinterpret_cast<const uint8_t*>(&endian)==1,"Converter needs a little-endian computer");
-    std::cout<<"nNova resource converter (C++17)\nReading "<<(opt.source/"data.win").string()<<"\n";
+    std::cout<<"nNova resource converter (C++17)\nReading "<<(opt.source/"data.win").u8string()<<"\n";
     GameData game(opt.source/"data.win");fs::create_directories(opt.output);
     require(game.sprites.size()<=pack::MaxSprites,"Too many sprites for this launcher version");
     struct Job{size_t source,output;unsigned frame;PageItem page;Sizing scale;};
@@ -397,5 +390,55 @@ int main(int argc,char**argv)try {
     std::ofstream report(opt.output/"conversion-report.txt");report<<"nNova conversion report\nSource: owner-supplied GameMaker data.win\nSource bytes: "<<header.source_bytes<<"\nSource CRC32: "<<std::hex<<std::setw(8)<<std::setfill('0')<<header.source_crc32<<std::dec<<"\nSprites: "<<sprites.size()<<"\nFrames: "<<frames.size()<<"\nUnique stored frames: "<<frames.size()-duplicate_frames<<"\nGraphics packs: "<<writer.pack_count<<"\nIndex bytes: "<<index.size()<<"\nGraphics bytes: "<<writer.total<<"\nUncompressed resized pixels: "<<raw_bytes<<"\nEnglish glyphs: "<<eng_glyphs<<"\nSimplified Chinese glyphs: "<<zhs_glyphs<<"\nTarget: 320 x 240, straight RGB565 plus full 8-bit alpha\nResampling: area filter with premultiplied alpha; only fully transparent borders trimmed\nStorage: lossless adaptive raw/RLE, identical frames shared\nAnimation: "<<(opt.compact?"explicit compact sampling":"all source frames preserved")<<"\nRuntime: decompression only on cache miss, bounded 2 MiB pixel cache\nMusic/audio: intentionally not converted; calculator build has no audio output\nLocalization: "<<(opt.all_locales?"all available CSV languages exported":"English/Simplified Chinese only")<<"; English/Simplified Chinese glyph packs baked\n";
     require(bool(report),"Cannot write conversion report");
     if(opt.verify)verify_pack(opt.output);
-    std::cout<<"Done: "<<opt.output.string()<<"\nGraphics + index: "<<writer.total+index.size()<<" bytes; "<<duplicate_frames<<" identical frames shared.\nCopy all *.dat.tns files into nNova/data beside nNova.tns.\n";return 0;
+    std::cout<<"Done: "<<opt.output.u8string()<<"\nGraphics + index: "<<writer.total+index.size()<<" bytes; "<<duplicate_frames<<" identical frames shared.\nCopy all *.dat.tns files into nNova/data beside nNova.tns.\n";return 0;
 }catch(const std::exception&e){std::cerr<<"Conversion failed: "<<e.what()<<"\nNo game executable was run.\n";return 1;}
+
+
+int main(int argc,char**argv) {
+#ifdef _WIN32
+    (void)argc; (void)argv;
+    // The CRT's narrow argv can already contain '?' for characters outside
+    // the machine's active code page. Read the unchanged wide command line.
+    // Dynamic lookup keeps the executable's existing build/link commands and
+    // loads only the Windows system DLL, never a DLL beside the game files.
+    struct WideArguments {
+        HMODULE shell=nullptr;
+        LPWSTR* values=nullptr;
+        ~WideArguments() {
+            if(values)LocalFree(values);
+            if(shell)FreeLibrary(shell);
+        }
+    } wide;
+    try {
+        wide.shell=LoadLibraryExW(L"shell32.dll",nullptr,LOAD_LIBRARY_SEARCH_SYSTEM32);
+        require(wide.shell!=nullptr,"Cannot load the Windows command-line parser");
+        using ParseArguments=LPWSTR* (WINAPI*)(LPCWSTR,int*);
+        auto parse=reinterpret_cast<ParseArguments>(GetProcAddress(wide.shell,"CommandLineToArgvW"));
+        require(parse!=nullptr,"Cannot locate the Windows command-line parser");
+        int count=0;
+        wide.values=parse(GetCommandLineW(),&count);
+        require(wide.values!=nullptr&&count>0,"Cannot parse the Windows command line");
+        std::vector<std::string> arguments;
+        arguments.reserve(size_t(count));
+        for(int i=0;i<count;++i) {
+            int bytes=WideCharToMultiByte(CP_UTF8,WC_ERR_INVALID_CHARS,wide.values[i],-1,nullptr,0,nullptr,nullptr);
+            require(bytes>0,"Invalid Unicode command-line argument");
+            std::string text(size_t(bytes),'\0');
+            require(WideCharToMultiByte(CP_UTF8,WC_ERR_INVALID_CHARS,wide.values[i],-1,text.data(),bytes,nullptr,nullptr)>0,
+                    "Cannot encode the Unicode command line");
+            text.pop_back();arguments.push_back(std::move(text));
+        }
+        std::vector<char*> pointers;
+        pointers.reserve(size_t(count)+1);
+        for(auto&argument:arguments)pointers.push_back(argument.data());
+        pointers.push_back(nullptr);
+        SetConsoleOutputCP(CP_UTF8);
+        return convert_main(count,pointers.data());
+    }catch(const std::exception&e) {
+        std::cerr<<"Converter startup failed: "<<e.what()<<"\n";
+        return 1;
+    }
+#else
+    return convert_main(argc,argv);
+#endif
+}

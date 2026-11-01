@@ -23,6 +23,7 @@ jobs:
         run: |
           ctest --test-dir build/host --output-on-failure
           python3 -m unittest discover -s tests -p 'test_*.py'
+          python3 tests/converter_path_test.py --converter build/host/nova-converter
       - name: Check gameplay memory and integer safety
         run: |
           g++ -std=c++17 -O1 -g -Wall -Wextra -Wpedantic -Werror -fsanitize=address,undefined -fno-omit-frame-pointer -Isrc src/game.cpp src/content.cpp tests/game_test.cpp -o build/game-sanitized
@@ -67,6 +68,8 @@ jobs:
         run: clang++ -O3 -std=c++17 -static -s -Iinclude tools/converter/main.cpp -o nova-converter.exe
       - name: Run Windows converter self-test
         run: .\nova-converter.exe --self-test
+      - name: Verify Unicode converter paths
+        run: python tests/converter_path_test.py --converter ./nova-converter.exe
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: nNova-converter-windows
