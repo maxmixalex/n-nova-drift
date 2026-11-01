@@ -1,0 +1,14 @@
+/build/
+/dist/
+__pycache__/
+*.pyc
+*.ppm
+*.snapshot
+*.sav.tns*
+*.cfg.tns*
+/.local-tools/
+*.dat.tns
+data.win
+NovaDrift.exe
+*.zip
+/nNova/

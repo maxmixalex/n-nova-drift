@@ -1,0 +1,79 @@
+name: Build and verify
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  linux:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - name: Install native and ARM build dependencies
+        run: sudo apt-get update && sudo apt-get install -y clang-18 lld-18 cmake libsdl2-dev
+      - name: Build desktop preview and converter
+        run: cmake -S . -B build/host -DCMAKE_BUILD_TYPE=Release && cmake --build build/host --parallel 2
+      - name: Build real Ndless launcher
+        env:
+          NOVA_CLANG: clang++-18
+          NOVA_LLD: ld.lld-18
+        run: python3 tools/build_ndless.py
+      - name: Run regression suite
+        run: |
+          ctest --test-dir build/host --output-on-failure
+          python3 -m unittest discover -s tests -p 'test_*.py'
+      - name: Check gameplay memory and integer safety
+        run: |
+          g++ -std=c++17 -O1 -g -Wall -Wextra -Wpedantic -Werror -fsanitize=address,undefined -fno-omit-frame-pointer -Isrc src/game.cpp src/content.cpp tests/game_test.cpp -o build/game-sanitized
+          ASAN_OPTIONS=detect_leaks=0 build/game-sanitized
+      - name: Check complete app flow with sanitizers
+        run: |
+          cmake -S . -B build/sanitized -DNOVA_ENABLE_SDL=OFF -DNOVA_SANITIZE=ON -DCMAKE_BUILD_TYPE=Debug
+          cmake --build build/sanitized --target app-flow-tests --parallel 2
+          ASAN_OPTIONS=detect_leaks=0 build/sanitized/app-flow-tests
+      - name: Verify missing-data screen
+        run: build/host/nova-drift --data /tmp/nova-missing/data --headless --frames 2 --screenshot build/missing-data.ppm
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: nNova-launcher-and-converter-linux
+          archive: true
+          path: |
+            dist/nNova.tns
+            build/host/nova-converter
+            build/host/nova-drift
+            build/missing-data.ppm
+            README.md
+            CONTROLS.md
+            LICENSE
+            THIRD_PARTY.md
+            third_party/licenses/*.txt
+            tools/converter/third_party/*LICENSE.txt
+          if-no-files-found: error
+  windows-converter:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - name: Install pinned LLVM-MinGW toolchain
+        shell: pwsh
+        run: |
+          $archive = "$env:RUNNER_TEMP/llvm-mingw.zip"
+          Invoke-WebRequest -Uri 'https://github.com/mstorsjo/llvm-mingw/releases/download/20261020/llvm-mingw-20261020-ucrt-x86_64.zip' -OutFile $archive
+          $expected = 'fd5462b7f5d93b2ff981fcd3f9c7e427e47f3203c64ea91c27bcc444eebd74cd'
+          if ((Get-FileHash $archive -Algorithm SHA256).Hash.ToLower() -ne $expected) { throw 'LLVM-MinGW archive checksum mismatch' }
+          Expand-Archive $archive -DestinationPath "$env:RUNNER_TEMP/llvm-mingw"
+          "$env:RUNNER_TEMP/llvm-mingw/llvm-mingw-20261020-ucrt-x86_64/bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+      - name: Build standalone converter
+        run: clang++ -O3 -std=c++17 -static -s -Iinclude tools/converter/main.cpp -o nova-converter.exe
+      - name: Run Windows converter self-test
+        run: .\nova-converter.exe --self-test
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: nNova-converter-windows
+          archive: true
+          path: |
+            nova-converter.exe
+            tools/converter/README.md
+            tools/converter/third_party/*LICENSE.txt
+            tools/converter/third_party/NOTICE.md
+          if-no-files-found: error
