@@ -1,0 +1,23 @@
+nNova 资源转换器 / Resource converter
+
+直接在计算器玩：把 ZIP 中的 nNova/nNova.tns 和 nNova/data/ 下所有 *.dat.tns 传到彩色 TI-Nspire，保留 nNova/data/ 层级。安装兼容 Ndless 后打开 nNova.tns。文档、证据表和 converter/ 留在电脑，不必传入计算器。
+
+Windows：把 converter.exe 放到自己的 PC 原游戏目录，与 NovaDrift.exe 和 data.win 同级，打开该目录的终端，运行 converter.exe。
+Linux：把 converter 放到自己的 PC 原游戏目录，运行 chmod +x converter，然后运行 ./converter。
+两者都不需要 Python、GameMaker 或联网。默认输出该目录下 nNova/data/，包含全部 11 种语言。将新 data/ 与本包的 nNova.tns 放在同一个 nNova/ 文件夹内。
+
+也可明确指定目录（含空格需加引号）：
+  converter.exe "C:\Games\Nova Drift" --output "C:\Transfer\nNova\data" --verify
+  ./converter "/games/Nova Drift" --output ./transfer/nNova/data --verify
+
+验证已转换数据：converter.exe --verify-pack "nNova/data"
+更多选项见 README.md。转换器读取您自己的原游戏资源，不修改原游戏文件。
+
+Controls: 8 thrust, 2 brake, 4/6 turn, 5 fire, 7 ability, 9 upgrades,
+0 switches Keypad / Touch Aim, 5 or Enter confirms, Menu/Esc backs out / pauses.
+菜单：8/2 上下，4/6 左右，5 或 Enter 确定。0 切换数字键优先/触摸瞄准模式。
+
+English: Transfer nNova/nNova.tns and nNova/data/*.dat.tns, preserving the
+nNova/data folder layout. Documentation and converters stay on the PC. Put the native
+converter next to your own NovaDrift.exe and data.win, then run converter.exe
+(Windows) or ./converter (Linux). No Python is required. Output is nNova/data.

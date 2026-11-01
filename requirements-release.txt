@@ -1,0 +1,3 @@
+# Build-time only: produces a smaller compatible Zehn zlib stream.
+# The calculator and both native converters do not need Python or this module.
+zopfli==0.4.3

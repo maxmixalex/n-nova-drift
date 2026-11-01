@@ -3,6 +3,9 @@
 
 namespace nova {
 static const Font* activeFont;
+static uint16_t styleColor(char code,uint16_t current) {
+    return code=='B'?rgb(84,184,255):code=='R'?rgb(250,50,105):code=='W'?rgb(233,237,251):current;
+}
 void Canvas::setFont(const Font* f) { activeFont=f&&f->ready()?f:0; }
 int Canvas::lineHeight() { return activeFont?activeFont->line_height():10; }
 
@@ -48,10 +51,14 @@ void Canvas::pixel(int x, int y, uint16_t color) {
 uint16_t Canvas::blend(uint16_t d, uint16_t s, unsigned a) {
     if (a >= 255) return s;
     unsigned inv = 256 - a;
-    unsigned r = (((d >> 11) * inv + (s >> 11) * a) >> 8) & 31;
-    unsigned g = ((((d >> 5) & 63) * inv + ((s >> 5) & 63) * a) >> 8) & 63;
-    unsigned b = (((d & 31) * inv + (s & 31) * a) >> 8) & 31;
-    return uint16_t((r << 11) | (g << 5) | b);
+    // Expand red to bit 16 before multiplying so the eight fractional bits
+    // cannot spill into blue. The original 565 gap is only six bits wide.
+    // Both channels retain the original floor rounding, with four multiplies.
+    unsigned dp = ((d & 0xf800u) << 5) | (d & 31u);
+    unsigned sp = ((s & 0xf800u) << 5) | (s & 31u);
+    unsigned rb = (dp * inv + sp * a) >> 8;
+    unsigned g = (((d & 0x07e0u) * inv + (s & 0x07e0u) * a) >> 8) & 0x07e0u;
+    return uint16_t(((rb >> 5) & 0xf800u) | (rb & 31u) | g);
 }
 
 void Canvas::alphaPixel(int x, int y, uint16_t color, unsigned a) {
@@ -154,14 +161,27 @@ void Canvas::bar(int x, int y, int w, int h, int value, int maximum, uint16_t c)
 
 void Canvas::sprite(int x, int y, const uint16_t* colors, const uint8_t* alpha,
                     int w, int h, int ox, int oy, int cosine, int sine,
-                    int scale, uint16_t tint, unsigned opacity, bool additive) {
-    if (!colors || w <= 0 || h <= 0 || scale <= 0 || scale > 1024) return;
+                    int scale, uint16_t tint, unsigned opacity, bool additive,unsigned lighting,bool mirrorY,int scaleY) {
+    if (!colors || w <= 0 || h <= 0 || scale <= 0 || scale > 0x3fffffff) return;
+    if(!scaleY)scaleY=scale;
+    if(scaleY<=0||scaleY>0x3fffffff)return;
+    if(mirrorY)oy=h-1-oy;
     int xmin=1024,ymin=1024,xmax=-1024,ymax=-1024;
     const int xx[4]={-ox,w-ox,-ox,w-ox};
     const int yy[4]={-oy,-oy,h-oy,h-oy};
     for (int i=0;i<4;++i) {
-        int dx=((xx[i]*cosine-yy[i]*sine)*scale)/65536;
-        int dy=((xx[i]*sine+yy[i]*cosine)*scale)/65536;
+        int dx,dy;
+        if(scale<=1024&&scaleY<=1024){
+            dx=(xx[i]*cosine*scale-yy[i]*sine*scaleY)/65536;
+            dy=(xx[i]*sine*scale+yy[i]*cosine*scaleY)/65536;
+        }else{
+            // Large source force fields can exceed the LCD. Clip their
+            // transformed bounds before rasterization without shrinking art.
+            int64_t wx=((int64_t)xx[i]*cosine*scale-(int64_t)yy[i]*sine*scaleY)/65536;
+            int64_t wy=((int64_t)xx[i]*sine*scale+(int64_t)yy[i]*cosine*scaleY)/65536;
+            dx=(int)(wx< -0x10000000?-0x10000000:wx>0x10000000?0x10000000:wx);
+            dy=(int)(wy< -0x10000000?-0x10000000:wy>0x10000000?0x10000000:wy);
+        }
         if(dx<xmin)xmin=dx;
         if(dx>xmax)xmax=dx;
         if(dy<ymin)ymin=dy;
@@ -173,22 +193,67 @@ void Canvas::sprite(int x, int y, const uint16_t* colors, const uint8_t* alpha,
     if(xmax>=ScreenW)xmax=ScreenW-1;
     if(ymax>=ScreenH)ymax=ScreenH-1;
     if(xmin>xmax || ymin>ymax)return;
-    int ic=cosine*256/scale, is=sine*256/scale;
-    bool direct=cosine==256 && sine==0 && scale==256;
+    if(cosine==256&&sine==0&&scale==256&&scaleY==256&&tint==65535&&opacity>=255&&!additive&&!lighting){
+        // Untransformed UI art, projectiles and small effects need no affine
+        // setup or per-pixel transform/colour-mode branches. Alpha and source
+        // coordinates are unchanged, including mirrored and offscreen art.
+        int left=x-ox,top=y-oy;
+        int x0=left<0?0:left,y0=top<0?0:top;
+        int x1=left+w>ScreenW?ScreenW:left+w,y1=top+h>ScreenH?ScreenH:top+h;
+        for(int row=y0;row<y1;row++){
+            int sy=row-top;if(mirrorY)sy=h-1-sy;
+            unsigned at=unsigned(sy*w+x0-left);uint16_t *dest=pixels+row*ScreenW+x0;
+            for(int col=x0;col<x1;col++,at++,dest++){
+                unsigned a=alpha?alpha[at]:255;if(a)*dest=a==255?colors[at]:blend(*dest,colors[at],a);
+            }
+        }
+        return;
+    }
+    unsigned bits=scale>1024||scaleY>1024?16:8;
+    int unit=1<<bits;
+    int ic=cosine*unit/scale, is=sine*unit/scale;
+    int iyc=cosine*unit/scaleY, iys=sine*unit/scaleY;
+    bool direct=cosine==256 && sine==0 && scale==256 && scaleY==256;
     unsigned tr=tint>>11,tg=(tint>>5)&63,tb=tint&31;
-    for(int dy=ymin;dy<=ymax;++dy) {
-        int sxq=(xmin-x)*ic+(dy-y)*is+ox*256;
-        int syq=-(xmin-x)*is+(dy-y)*ic+oy*256;
+    // One screen-pixel edge sample in source coordinates. This depends only
+    // on the transform, not on the sampled pixel (ARM926 division is costly).
+    const int rim_step=scale<256?(256+scale-1)/scale:1;
+    auto raster=[&](auto coordinate) {
+      using Coordinate=decltype(coordinate);
+      for(int dy=ymin;dy<=ymax;++dy) {
+        Coordinate sxq=(Coordinate)((int64_t(xmin)-x)*ic+(int64_t(dy)-y)*is+int64_t(ox)*unit);
+        Coordinate syq=(Coordinate)(-(int64_t(xmin)-x)*iys+(int64_t(dy)-y)*iyc+int64_t(oy)*unit);
         uint16_t* dest=pixels+dy*ScreenW+xmin;
-        for(int dx=xmin;dx<=xmax;++dx,++dest,sxq+=ic,syq-=is) {
-            int sx=direct?dx-x+ox:sxq>>8;
-            int sy=direct?dy-y+oy:syq>>8;
+        for(int dx=xmin;dx<=xmax;++dx,++dest,sxq+=ic,syq-=iys) {
+            int sx=direct?dx-x+ox:(int)(sxq>>bits);
+            int sy=direct?dy-y+oy:(int)(syq>>bits);
             if(unsigned(sx)>=unsigned(w)||unsigned(sy)>=unsigned(h))continue;
+            if(mirrorY)sy=h-1-sy;
             unsigned at=unsigned(sy*w+sx);
             unsigned a=alpha?alpha[at]:255;
             if(!a)continue;
             if(opacity<255)a=a*opacity/255;
             uint16_t c=colors[at];
+            if(lighting) {
+                // Ambient illumination and an alpha-derived, one-pixel rim.
+                // The original rock texture/silhouette are preserved; there
+                // is no circular glow and no change to collision geometry.
+                unsigned r=c>>11,g=(c>>5)&63,b=c&31;
+                bool edge=false;
+                if(alpha&&lighting==1) {
+                    int step=rim_step;
+                    edge=sx<step||sy<step||sx+step>=w||sy+step>=h;
+                    if(!edge)edge=alpha[at-step]<64||alpha[at+step]<64||
+                        alpha[at-unsigned(step*w)]<64||alpha[at+unsigned(step*w)]<64;
+                }
+                if(lighting==1){r=r*7/4+6;g=g*7/4+12;b=b*7/4+8;}
+                else {r=r*2+4;g=g*2+6;b=b*2+7;}
+                if(edge){r+=5;g+=10;b+=6;}
+                if(r>31)r=31;
+                if(g>63)g=63;
+                if(b>31)b=31;
+                c=uint16_t((r<<11)|(g<<5)|b);
+            }
             if(tint!=65535) {
                 unsigned r=(c>>11)*tr/31;
                 unsigned g=((c>>5)&63)*tg/63;
@@ -206,6 +271,19 @@ void Canvas::sprite(int x, int y, const uint16_t* colors, const uint8_t* alpha,
             } else *dest=a==255?c:blend(*dest,c,a);
         }
     }
+    };
+    // ARM926 has no single-register 64-bit add or variable shift. Ordinary
+    // sprite coordinates fit 32 bits; prove the entire affine rectangle first.
+    // Include the one-past X increment executed by the loop, even though that
+    // value is never sampled. Large fields retain the original 64-bit path.
+    bool narrow=bits==8;
+    const int bound_x[2]={xmin,xmax+1},bound_y[2]={ymin,ymax};
+    for(unsigned by=0;narrow&&by<2;++by)for(unsigned bx=0;bx<2;++bx){
+        int64_t sxq=(int64_t(bound_x[bx])-x)*ic+(int64_t(bound_y[by])-y)*is+int64_t(ox)*unit;
+        int64_t syq=-(int64_t(bound_x[bx])-x)*iys+(int64_t(bound_y[by])-y)*iyc+int64_t(oy)*unit;
+        if(sxq<INT32_MIN||sxq>INT32_MAX||syq<INT32_MIN||syq>INT32_MAX){narrow=false;break;}
+    }
+    if(narrow)raster(int32_t(0));else raster(int64_t(0));
 }
 
 void Canvas::text(int x, int y, const char* s, uint16_t c, int scale) {
@@ -213,6 +291,14 @@ void Canvas::text(int x, int y, const char* s, uint16_t c, int scale) {
     int left = x;
     while (*s) {
         unsigned ch=next_utf8(s);
+        if(ch==27&&*s) {
+            char style=*s++;
+            if(style=='D') {
+                line(x+1,y+6,x+3,y+4,rgb(233,237,251));line(x+3,y+4,x+5,y+6,rgb(233,237,251));
+                line(x+5,y+6,x+3,y+8,rgb(233,237,251));line(x+3,y+8,x+1,y+6,rgb(233,237,251));x+=9;
+            }else c=styleColor(style,c);
+            continue;
+        }
         if (ch == '\n') { y+=lineHeight()*scale; x=left; continue; }
         if (activeFont) {
             const GlyphRecord* glyph=activeFont->glyph(ch);
@@ -244,6 +330,7 @@ int Canvas::textWidth(const char* s, int scale) {
     int n=0, max=0;
     while(*s) {
         unsigned ch=next_utf8(s);
+        if(ch==27&&*s){if(*s++=='D')n+=9;continue;}
         if (ch=='\n') { if(n>max)max=n; n=0; }
         else if(activeFont){const GlyphRecord* g=activeFont->glyph(ch);if(g)n+=g->advance;}
         else n+=6;
@@ -259,10 +346,29 @@ void Canvas::right(int x, int y, const char* s, uint16_t c, int scale) {
     text(x-textWidth(s,scale),y,s,c,scale);
 }
 
-int Canvas::wrapped(int x, int y, int width, int maxLines, const char* s, uint16_t c) {
+void Canvas::clipped(int x,int y,int width,const char* string,uint16_t color) {
+    if(!string||width<1)return;
+    if(textWidth(string)<=width){text(x,y,string,color);return;}
+    char buffer[256];unsigned count=0;int used=0;
+    const int dots=textWidth("...");
+    while(*string&&count+5<sizeof(buffer)) {
+        const char* first=string;unsigned cp=next_utf8(string);
+        if(cp==27&&*string){char style=*string++;while(first<string)buffer[count++]=*first++;if(style=='D')used+=9;continue;}
+        int advance=activeFont?(activeFont->glyph(cp)?activeFont->glyph(cp)->advance:0):6;
+        if(used+advance+dots>width)break;
+        while(first<string)buffer[count++]=*first++;
+        used+=advance;
+    }
+    buffer[count]=0;append(buffer,sizeof(buffer),"...");text(x,y,buffer,color);
+}
+int Canvas::wrapped(int x,int y,int width,int maxLines,const char* s,uint16_t c) {
+    return wrappedPage(x,y,width,maxLines,0,s,c);
+}
+int Canvas::wrappedPage(int x,int y,int width,int maxLines,int skipLines,const char* s,uint16_t c) {
     if (!s || width < 6 || maxLines < 1) return 0;
     int lines=0;
-    while(*s && lines<maxLines) {
+    uint16_t lineColor=c;
+    while(*s) {
         char lineBuffer[256];
         const char* scan=s;
         const char* cut=s;
@@ -272,17 +378,20 @@ int Canvas::wrapped(int x, int y, int width, int maxLines, const char* s, uint16
             const char* before=scan;
             unsigned ch=next_utf8(scan);
             int advance=6;
-            if(activeFont){const GlyphRecord* g=activeFont->glyph(ch);advance=g?g->advance:0;}
+            if(ch==27&&*scan){advance=*scan++=='D'?9:0;}
+            else if(activeFont){const GlyphRecord* g=activeFont->glyph(ch);advance=g?g->advance:0;}
             if(measured+advance>width || scan-s>254) { scan=before;break; }
             measured+=advance;cut=scan;
             if(ch==' ')space=before;
         }
         if(*scan && *scan!='\n' && space && space>s)cut=space;
-        if(cut==s){cut=s;next_utf8(cut);}
+        if(cut==s&&*s!='\n'){cut=s;next_utf8(cut);}
         unsigned count=unsigned(cut-s);
         for(unsigned i=0;i<count;++i)lineBuffer[i]=s[i];
         lineBuffer[count]=0;
-        text(x,y+lines*lineHeight(),lineBuffer,c);
+        if(lines>=skipLines&&lines<skipLines+maxLines)
+            text(x,y+(lines-skipLines)*lineHeight(),lineBuffer,lineColor);
+        for(unsigned i=0;i<count;++i)if(lineBuffer[i]==27&&i+1<count)lineColor=styleColor(lineBuffer[++i],lineColor);
         s=cut;if(*s=='\n')++s;
         while(*s==' ')++s;
         ++lines;

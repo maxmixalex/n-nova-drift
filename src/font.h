@@ -18,12 +18,13 @@ static_assert(sizeof(GlyphRecord)==20,"glyph record layout");
 
 class Font {
 public:
-    bool open(bool simplified_chinese);
+    bool open(unsigned language);
     void close() { valid_=false; }
     bool ready() const { return valid_; }
     int line_height() const;
     int pixel_height() const;
     const GlyphRecord* glyph(uint32_t codepoint) const;
+    bool contains(uint32_t codepoint) const;
     const uint8_t* pixels(const GlyphRecord& glyph) const { return data_+glyph.offset; }
 private:
     alignas(4) uint8_t data_[1024*1024];

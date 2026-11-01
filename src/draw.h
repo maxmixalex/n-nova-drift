@@ -28,12 +28,15 @@ public:
     void sprite(int x, int y, const uint16_t* colors, const uint8_t* alpha,
                 int width, int height, int originX, int originY,
                 int cosine = 256, int sine = 0, int scale = 256,
-                uint16_t tint = 65535, unsigned opacity = 255, bool additive = false);
+                uint16_t tint = 65535, unsigned opacity = 255, bool additive = false,
+                unsigned lighting = 0, bool mirrorY = false, int scaleY = 0);
     void bar(int x, int y, int w, int h, int value, int maximum, uint16_t color);
     void text(int x, int y, const char* string, uint16_t color, int scale = 1);
+    void clipped(int x,int y,int width,const char* string,uint16_t color);
     void centered(int y, const char* string, uint16_t color, int scale = 1);
     void right(int x, int y, const char* string, uint16_t color, int scale = 1);
     int wrapped(int x, int y, int width, int maxLines, const char* string, uint16_t color);
+    int wrappedPage(int x,int y,int width,int maxLines,int skipLines,const char* string,uint16_t color);
     static int textWidth(const char* string, int scale = 1);
     static void setFont(const Font* font);
     static int lineHeight();

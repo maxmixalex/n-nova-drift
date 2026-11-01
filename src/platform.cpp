@@ -1,4 +1,6 @@
 #include "platform.h"
+#include "input_controller.h"
+#include "system_locale.h"
 
 #if defined(NOVA_NDLESS)
 extern "C" {
@@ -13,6 +15,13 @@ int nd_unlink(const char*);
 int nd_rename(const char*, const char*);
 unsigned nd_hwtype();
 unsigned nd_revision();
+int nd_has_syscall(unsigned);
+void* nd_calc_address();
+int nd_math_to_string(void*,void*,uint16_t**);
+void nd_os_free(void*);
+int nd_inflate_init(void*,int,const char*,unsigned);
+int nd_inflate(void*,int);
+int nd_inflate_end(void*);
 int nd_lcd_init(int);
 void (*nd_blitter(int))(void*);
 int nd_touch_read(unsigned, unsigned, void*);
@@ -21,6 +30,7 @@ int nd_touch_write(unsigned, unsigned, const void*);
 #else
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 #include <chrono>
 #include <thread>
 #include <sys/stat.h>
@@ -107,32 +117,69 @@ SDL_Window* window;
 SDL_Renderer* renderer;
 SDL_Texture* texture;
 uint32_t keyboard_buttons;
-uint8_t keyboard_counts[16];
+uint8_t keyboard_counts[18],physical_counts[93];
+uint32_t keyboard_physical[3];
 bool mouse_seen, mouse_down;
+uint8_t physical_for_key(SDL_Keycode code) {
+    static const uint8_t letters[26]={
+        calculator_key(4,6),calculator_key(4,5),calculator_key(4,4),calculator_key(4,2),calculator_key(4,1),calculator_key(4,0),
+        calculator_key(3,6),calculator_key(3,5),calculator_key(3,4),calculator_key(3,2),calculator_key(3,1),calculator_key(3,0),
+        calculator_key(2,6),calculator_key(2,5),calculator_key(2,4),calculator_key(2,2),calculator_key(2,1),calculator_key(2,0),
+        calculator_key(1,6),calculator_key(1,5),calculator_key(1,4),calculator_key(1,2),calculator_key(1,1),calculator_key(1,0),
+        calculator_key(0,6),calculator_key(0,5)};
+    static const uint8_t digits[10]={Key0,Key1,Key2,Key3,Key4,Key5,Key6,Key7,Key8,Key9};
+    if(code>=SDLK_a&&code<=SDLK_z)return letters[code-SDLK_a];
+    if(code>=SDLK_0&&code<=SDLK_9)return digits[code-SDLK_0];
+    switch(code) {
+    case SDLK_KP_0:return Key0;case SDLK_KP_1:return Key1;case SDLK_KP_2:return Key2;
+    case SDLK_KP_3:return Key3;case SDLK_KP_4:return Key4;case SDLK_KP_5:return Key5;
+    case SDLK_KP_6:return Key6;case SDLK_KP_7:return Key7;case SDLK_KP_8:return Key8;case SDLK_KP_9:return Key9;
+    case SDLK_RETURN:case SDLK_KP_ENTER:return KeyEnter;case SDLK_ESCAPE:return KeyEscape;
+    case SDLK_SPACE:return KeySpace;case SDLK_TAB:return KeyTab;case SDLK_HOME:return KeyHome;
+    case SDLK_LSHIFT:case SDLK_RSHIFT:return KeyShift;case SDLK_LCTRL:case SDLK_RCTRL:return KeyControl;
+    case SDLK_UP:return KeyHostUp;case SDLK_DOWN:return KeyHostDown;case SDLK_LEFT:return KeyHostLeft;case SDLK_RIGHT:return KeyHostRight;
+    case SDLK_MINUS:case SDLK_KP_MINUS:return KeyMinus;case SDLK_PLUS:case SDLK_KP_PLUS:return calculator_key(6,2);
+    case SDLK_DELETE:case SDLK_BACKSPACE:return KeyDelete;case SDLK_MENU:return KeyMenu;
+    case SDLK_PERIOD:case SDLK_KP_PERIOD:return calculator_key(5,4);case SDLK_COMMA:return calculator_key(7,10);
+    case SDLK_EQUALS:return calculator_key(4,7);case SDLK_SLASH:case SDLK_KP_DIVIDE:return calculator_key(3,8);
+    case SDLK_ASTERISK:case SDLK_KP_MULTIPLY:return calculator_key(4,8);case SDLK_QUOTE:return calculator_key(5,0);
+    case SDLK_LEFTPAREN:return calculator_key(5,5);case SDLK_RIGHTPAREN:return calculator_key(5,3);
+    default:return 0;
+    }
+}
 uint32_t button_for_key(SDL_Keycode code) {
     switch (code) {
-    case SDLK_UP: case SDLK_w: case SDLK_8: return ButtonUp|ButtonThrust;
+    case SDLK_UP: case SDLK_w: case SDLK_8: case SDLK_KP_8: return ButtonUp|ButtonThrust;
     case SDLK_DOWN: case SDLK_s: return ButtonDown;
-    case SDLK_LEFT: case SDLK_a: case SDLK_4: return ButtonLeft;
-    case SDLK_RIGHT: case SDLK_d: case SDLK_6: return ButtonRight;
+    case SDLK_LEFT: case SDLK_a: case SDLK_4: case SDLK_KP_4: return ButtonLeft;
+    case SDLK_RIGHT: case SDLK_d: case SDLK_6: case SDLK_KP_6: return ButtonRight;
     case SDLK_RETURN: case SDLK_KP_ENTER: return ButtonConfirm;
     case SDLK_ESCAPE: return ButtonBack;
+    case SDLK_5: case SDLK_KP_5: case SDLK_LCTRL: case SDLK_RCTRL:
     case SDLK_SPACE: case SDLK_z: return ButtonFire;
     case SDLK_LSHIFT: case SDLK_RSHIFT: case SDLK_x: return ButtonThrust;
     case SDLK_p: return ButtonPause;
     case SDLK_m: return ButtonMenu;
-    case SDLK_TAB: return ButtonTab;
-    case SDLK_r: return ButtonReroll;
-    case SDLK_1: return Button1;
-    case SDLK_2: return Button2|ButtonDown;
-    case SDLK_3: return Button3;
-    case SDLK_u: return ButtonUpgrade;
+    case SDLK_7: case SDLK_KP_7: case SDLK_TAB: return ButtonTab;
+    case SDLK_MINUS: case SDLK_KP_MINUS: case SDLK_r: return ButtonReroll;
+    case SDLK_1: case SDLK_KP_1: return 0;
+    case SDLK_2: case SDLK_KP_2: return ButtonDown;
+    case SDLK_3: case SDLK_KP_3: return 0;
+    case SDLK_9: case SDLK_KP_9: case SDLK_u: return ButtonUpgrade;
+    case SDLK_0: case SDLK_KP_0: return ButtonPointerMode;
+    case SDLK_DELETE: case SDLK_BACKSPACE: return ButtonBanish;
     default: return 0;
     }
 }
 void keyboard_event(SDL_Keycode code,bool down) {
+    const uint8_t physical=physical_for_key(code);
+    if(physical) {
+        if(down){if(physical_counts[physical]<255)++physical_counts[physical];}
+        else if(physical_counts[physical])--physical_counts[physical];
+        physical_set(keyboard_physical,physical,physical_counts[physical]!=0);
+    }
     const uint32_t mask=button_for_key(code);
-    for (unsigned bit=0;bit<16;++bit) if (mask&(1u<<bit)) {
+    for (unsigned bit=0;bit<18;++bit) if (mask&(1u<<bit)) {
         if (down) { if (keyboard_counts[bit]<255) ++keyboard_counts[bit]; }
         else if (keyboard_counts[bit]) --keyboard_counts[bit];
         if (keyboard_counts[bit]) keyboard_buttons|=1u<<bit;
@@ -195,7 +242,7 @@ bool exact_state(const char* filename,void* data,size_t bytes) {
 
 bool initialize(const char* launcher_path) {
     make_root(launcher_path);
-    previous_buttons=0; previous_pointer=false;
+    previous_buttons=0; previous_pointer=false;pointer_x=160;pointer_y=120;
 #if defined(NOVA_NDLESS)
     // CX/CX II; old monochrome Clickpad hardware cannot show this color game.
     if (nd_revision()<2022 || nd_hwtype()==0) return false;
@@ -207,7 +254,13 @@ bool initialize(const char* launcher_path) {
     if (!screen_blit) { shutdown(); return false; }
     initialize_touchpad();
 #else
-    started=std::chrono::steady_clock::now();
+    started=std::chrono::steady_clock::now();host_frame_count=0;host_quit=false;
+#if defined(NOVA_SDL)
+    keyboard_buttons=0;for (auto& count:keyboard_counts) count=0;
+    for(auto& count:physical_counts)count=0;
+    for(auto& bits:keyboard_physical)bits=0;
+    mouse_seen=mouse_down=false;
+#endif
     if (*host_data_path) {
         copy_text(root_path,sizeof root_path,host_data_path);
         size_t n=text_length(root_path);
@@ -279,36 +332,27 @@ Input poll() {
     Input input{};
     input.pointer_x=pointer_x; input.pointer_y=pointer_y;
 #if defined(NOVA_NDLESS)
-    uint32_t buttons=0;
-    if (key(0x12,0x002)||key(0x1C,0x040)) buttons|=ButtonUp|ButtonThrust; // W, 8
-    if (key(0x12,0x040)||key(0x1C,0x010)) buttons|=ButtonDown; // S, 2
-    if (key(0x18,0x040)||key(0x14,0x080)) buttons|=ButtonLeft; // A, 4
-    if (key(0x18,0x004)||key(0x14,0x008)) buttons|=ButtonRight; // D, 6
-    if (key(0x10,0x003)) buttons|=ButtonConfirm;
-    if (key(0x1C,0x080)) buttons|=ButtonBack;
-    if (key(0x10,0x030)||key(0x1E,0x200)) buttons|=ButtonFire; // Space, Z, Ctrl
-    if (key(0x12,0x001)||key(0x1E,0x100)) buttons|=ButtonThrust; // X, Shift
-    if (key(0x14,0x004)) buttons|=ButtonPause;
-    if (key(0x1C,0x028)) buttons|=ButtonMenu; // Menu, Doc
-    if (key(0x1C,0x200)) buttons|=ButtonTab;
-    if (key(0x14,0x001)) buttons|=ButtonReroll;
-    if (key(0x12,0x080)) buttons|=Button1;
-    if (key(0x1C,0x010)) buttons|=Button2;
-    if (key(0x12,0x008)) buttons|=Button3;
-    if (key(0x12,0x010)) buttons|=ButtonUpgrade; // U
+    uint16_t rows[8];
+    for (unsigned i=0;i<8;++i)
+        rows[i]=*reinterpret_cast<volatile uint16_t*>(0x900E0010u+i*2);
+    const uint32_t buttons=decode_calculator_keys(rows);
+    input.physical_valid=true;
+    for(unsigned row=0;row<8;++row)for(unsigned col=0;col<11;++col)
+        if(rows[row]&(1u<<col))physical_set(input.physical_keys,calculator_key(row,col),true);
+    input.pointer_is_touchpad=true;
     uint8_t report[12]={};
     if (pad_width && pad_height && nd_touch_read(0,10,report)) {
         const unsigned x=(unsigned(report[2])<<8)|report[3], y=(unsigned(report[4])<<8)|report[5];
         if (x<=pad_width && y<=pad_height) {
-            input.pointer_present=report[0]!=0;
+            input.pointer_present=report[0]!=0||report[10]!=0;
             if (input.pointer_present) {
                 pointer_x=static_cast<int16_t>(x*319u/pad_width);
                 pointer_y=static_cast<int16_t>((pad_height-y)*239u/pad_height);
                 input.pointer_x=pointer_x; input.pointer_y=pointer_y;
             }
             input.pointer_down=report[10]!=0;
-            // The pad is absolute aim/click. Its rim is not synthesized as
-            // keyboard movement: that would cancel aim while clicking to fire.
+            // Keep the pad separate from the matrix. InputController chooses
+            // either latched direction keys OR pointing; never both.
         }
     }
     input.held=buttons;
@@ -322,7 +366,10 @@ Input poll() {
             if (event.type==SDL_KEYDOWN && !event.key.repeat) keyboard_event(event.key.keysym.sym,true);
             if (event.type==SDL_KEYUP) keyboard_event(event.key.keysym.sym,false);
             if (event.type==SDL_WINDOWEVENT && event.window.event==SDL_WINDOWEVENT_FOCUS_LOST) {
-                keyboard_buttons=0; for (auto& count:keyboard_counts) count=0; mouse_down=false;
+                keyboard_buttons=0;for(auto& count:keyboard_counts)count=0;
+                for(auto& count:physical_counts)count=0;
+                for(auto& bits:keyboard_physical)bits=0;
+                mouse_seen=mouse_down=false;
             }
             if (event.type==SDL_MOUSEMOTION || event.type==SDL_MOUSEBUTTONDOWN || event.type==SDL_MOUSEBUTTONUP) {
                 int x,y; SDL_GetMouseState(&x,&y);
@@ -334,7 +381,9 @@ Input poll() {
                 if (event.type==SDL_MOUSEBUTTONUP && event.button.button==SDL_BUTTON_LEFT) mouse_down=false;
             }
         }
-        input.held=keyboard_buttons; input.pointer_present=mouse_seen; input.pointer_down=mouse_down;
+        input.held=keyboard_buttons;input.physical_valid=true;
+        for(unsigned i=0;i<3;++i)input.physical_keys[i]=keyboard_physical[i];
+        input.pointer_present=mouse_seen; input.pointer_down=mouse_down;
         input.pointer_x=pointer_x; input.pointer_y=pointer_y;
     }
 #endif
@@ -362,7 +411,65 @@ uint32_t seed() {
     return static_cast<uint32_t>(std::chrono::high_resolution_clock::now().time_since_epoch().count())^0x4e4f5641u;
 #endif
 }
+uint32_t utc_day() {
+#if defined(NOVA_NDLESS)
+    const uint32_t seconds=*reinterpret_cast<volatile uint32_t*>(0x90090000u);
+#else
+    const auto now=std::chrono::system_clock::now().time_since_epoch();
+    const auto raw=std::chrono::duration_cast<std::chrono::seconds>(now).count();
+    if(raw<0||raw>0xffffffffll)return 0;
+    const uint32_t seconds=static_cast<uint32_t>(raw);
+#endif
+    // A CX reset/hibernation may clear the RTC. Only a configured 2020..2099
+    // clock is accepted; the application offers a saved, editable date otherwise.
+    return seconds>=1577836800u&&seconds<=4102444799u?seconds/86400u:0;
+}
 const char* base_path() { return root_path; }
+const char* system_language() {
+#if defined(NOVA_NDLESS)
+    static char tag[32];
+    if (nd_has_syscall(339)&&nd_has_syscall(342)) {
+        // calc_cmd is a five-argument OS function; call its address directly
+        // instead of passing the fifth argument through a four-register SWI.
+        using Evaluate=int(*)(void*,void*,const uint16_t*,void*,void*);
+        const auto evaluate=reinterpret_cast<Evaluate>(nd_calc_address());
+        static const uint16_t query[]={'g','e','t','L','a','n','g','I','n','f','o','(',')',0};
+        void* expression=nullptr;uint16_t* text=nullptr;int offset=0;bool ok=false;
+        if (evaluate&&!evaluate(nullptr,nullptr,query,&expression,&offset)&&expression&&
+            !nd_math_to_string(expression,nullptr,&text))ok=locale_text(tag,text);
+        if (text&&static_cast<void*>(text)!=expression)nd_os_free(text);
+        if (expression)nd_os_free(expression);
+        if (ok)return tag;
+    }
+    // Older supported OS versions do not export the expression formatter.
+    // Read only the real current preference, using its bounded settings entry.
+    static uint8_t settings[16384+8192];
+    void* file=nd_open("/phoenix/syst/settings/current.zip","rb");
+    if (!file)return nullptr;
+    const unsigned count=nd_read(settings,1,16384,file);nd_close(file);
+    LocaleArchiveEntry entry{};
+    if (!locale_archive(settings,count,entry))return nullptr;
+    if (!entry.deflated)return locale_xml(tag,entry.data,entry.plain)?tag:nullptr;
+    struct Stream {
+        const uint8_t* next_in;uint32_t avail_in,total_in;
+        uint8_t* next_out;uint32_t avail_out,total_out;
+        void* message;void* state;void* allocate;void* release;void* opaque;
+        int32_t data_type;uint32_t adler,reserved;
+    } stream{};
+    static_assert(sizeof(Stream)==56,"ARM32 OS zlib ABI");
+    stream.next_in=entry.data;stream.avail_in=entry.compressed;
+    stream.next_out=settings+16384;stream.avail_out=entry.plain;
+    if (nd_inflate_init(&stream,-15,"1.2.3",sizeof stream)!=0)return nullptr;
+    const int result=nd_inflate(&stream,4);nd_inflate_end(&stream);
+    return result==1&&stream.total_out==entry.plain&&!stream.avail_in&&
+        locale_xml(tag,settings+16384,entry.plain)?tag:nullptr;
+#else
+    const char* value=getenv("LC_ALL");
+    if (!value||!*value)value=getenv("LC_MESSAGES");
+    if (!value||!*value)value=getenv("LANG");
+    return value&&*value?value:nullptr;
+#endif
+}
 File* open_data(const char* filename) { char location[512]; return path(location,"data",filename)?raw_open(location,"rb"):nullptr; }
 File* open_state(const char* filename,bool writing) { char location[512]; return path(location,"state",filename)?raw_open(location,writing?"wb":"rb"):nullptr; }
 size_t read(File* file,void* destination,size_t bytes) { return file?raw_read(file,destination,bytes):0; }

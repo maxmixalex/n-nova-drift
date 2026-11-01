@@ -15,6 +15,8 @@ enum Button : uint32_t {
     ButtonTab = 1u << 10, ButtonReroll = 1u << 11,
     Button1 = 1u << 12, Button2 = 1u << 13, Button3 = 1u << 14,
     ButtonUpgrade = 1u << 15,
+    ButtonPointerMode = 1u << 16, // 0: explicit keypad / touch-aim mode switch
+    ButtonBanish = 1u << 17,
 };
 
 struct Input {
@@ -22,7 +24,10 @@ struct Input {
     int16_t pointer_x, pointer_y; // absolute screen coordinates
     bool pointer_present;      // a finger/mouse pointer is active
     bool pointer_down, pointer_pressed, pointer_released;
+    bool pointer_is_touchpad;  // physical calculator pad, not a desktop mouse
     bool quit;                 // host window close only; Back belongs to App
+    uint32_t physical_keys[3];  // CX 8x11 matrix IDs 1..88; desktop arrows 89..92
+    bool physical_valid;       // synthetic callers may supply only held bits
 };
 
 namespace platform {
@@ -34,7 +39,13 @@ uint32_t ticks_ms();
 void wait_ms(uint32_t milliseconds);
 void present(const uint16_t* rgb565);
 uint32_t seed();
+// UTC days since 1970, or zero when the calculator RTC has no plausible date.
+// Never use the elapsed runtime counter as a calendar date.
+uint32_t utc_day();
 const char* base_path();
+// Actual OS locale tag (for example en-US or zh-CN), or nullptr when unknown.
+// The application chooses among installed packs and owns fallback policy.
+const char* system_language();
 
 using File = void;
 File* open_data(const char* filename);

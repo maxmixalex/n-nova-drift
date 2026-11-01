@@ -3,8 +3,9 @@
 #include <stdint.h>
 
 namespace nova {
-// Names and mechanical identities come from the supplied game's localization
-// and object metadata. Numeric values are separately balanced for 320x240.
+// Recovered source values are documented in docs/evidence/native_constants.csv.
+// Damage, count, hull and cooldowns retain those values where recovered;
+// spatial values are converted to the 320x240 fixed-point battlefield.
 enum WeaponId { W_BLASTER, W_SPLIT_SHOT, W_FLAK, W_RAILGUN, W_GRENADE,
     W_SALVO, W_VORTEX, W_PULSE, W_TORRENT, W_BLADE, W_DART,
     W_THERMAL_LANCE, W_SWORDS, WEAPON_COUNT };
@@ -43,6 +44,16 @@ enum EnemyId { E_ASTEROID, E_SWARMLING, E_DRONE, E_WASP, E_SPITFIRE,
     E_WARDEN, E_BEAMCASTER, E_CHERUB, E_JUGGERNAUT, E_MINELAYER, E_TRACER,
     E_SCION, E_DREADNOUGHT, E_STATION_OMEGA, E_WARBRINGER,
     E_SERAPH, E_STAR_EATER, E_DWELLER, E_CERATOTITAN, E_GLAUCUS, E_CRUCIBLE,
+    E_HOST,E_HIVE,E_HIVE_DRONE,E_MYRMIDON,E_PULSAR,E_PULSAR_MINE,
+    E_SNAPPER,E_CELESTIAL,E_CELESTIAL_DRONE,E_ECLIPSE,E_CONSTRUCTOR,
+    E_CONSTRUCTOR_DRONE,E_STEALTH_MINE,E_SHREDDER_MINE,E_WORM,
+    E_DWELLER_DRONE,E_DWELLER_SOLDIER,E_DWELLER_GUARD,E_DWELLER_WARRIOR,
+    E_GYROGUN,E_BOLT_THROWER,E_CRAB_NEST,
+    E_HOST_DRONE,E_HOST_DRONE_2,E_HOST_DRONE_3,E_HIVE_DRONE_HOT,
+    E_CONSTRUCTOR_TURRET,E_SWARMLING_GREEN,E_SERAPH_DRONE,E_SERAPH_ZONE_DRONE,
+    E_CRUCIBLE_DRONE, E_SINGULARITY_MINE, E_MINE_DRONE,
+    E_INTERCEPTOR_MINE, E_MINE_SHIELD, E_DWELLER_CHITIN,
+    E_JUGG_MISSILE, E_JUGG_MISSILE_HOMING, E_CONSTRUCTOR_MISSILE,
     ENEMY_COUNT };
 enum OfferKind { OFFER_MOD, OFFER_WEAPON, OFFER_BODY, OFFER_SHIELD };
 struct Offer { uint8_t kind, id; };
@@ -71,7 +82,7 @@ struct ModDef {
 };
 struct EnemyDef {
     const char *name, *sprite;
-    int16_t hull;
+    int32_t hull;
     uint8_t radius, speed, contact, xp, fire_delay;
 };
 extern const WeaponDef weapons[WEAPON_COUNT];
@@ -79,6 +90,7 @@ extern const BodyDef bodies[BODY_COUNT];
 extern const ShieldDef shields[SHIELD_COUNT];
 extern const ModDef mods[MOD_COUNT];
 extern const EnemyDef enemy_types[ENEMY_COUNT];
+bool enemyIsBoss(unsigned id);
 const char *offerName(const Offer &offer);
 const char *offerDescription(const Offer &offer);
 const char *offerSprite(const Offer &offer);

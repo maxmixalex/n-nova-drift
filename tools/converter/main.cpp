@@ -2,6 +2,9 @@
 // This parser reads only the documented, bounds-checked resource portions of
 // GameMaker FORM files; it neither runs nor decompiles executable game code.
 #include "nnova/pack_format.h"
+#include "nnova/image_encode.h"
+#include "nnova/blob_codec.h"
+#include "nnova/native_strings.h"
 #include <algorithm>
 #include <array>
 #include <cmath>
@@ -215,6 +218,14 @@ static Sizing sizing(const SourceSprite&s) {
     else if(has(n,"AsteroidLarge")){w=40;h=40;c="asteroid";}
     else if(has(n,"AsteroidMega")){w=60;h=60;c="asteroid";}
     else if(n.rfind("s_power_",0)==0||n=="s_bounty_get"){w=9;h=9;c="pickup";}
+    // Live boss assemblies use original attachment geometry. Keep their
+    // largest thin parts at display resolution instead of enlarging a 48px
+    // generic effect. Only these five source sprites need the extra pixels.
+    else if(n=="sDreadnoughtWing"){w=80;h=80;c="boss";}
+    else if(n=="sStation"||n=="sStationGlow"){w=72;h=72;c="boss";}
+    else if(n=="sCrucibleEdgeCool"||n=="sCrucibleEdgeHot"){w=24;h=120;c="boss";}
+    else if(n.rfind("sBulwarkBarrier",0)==0||n=="sBulwarkCounter"||n=="sBulwarkCounterDark"){w=96;h=120;c="boss";}
+    else if(n=="sBulwarkTail"||n=="sBulwarkTailGlow"){w=80;h=48;c="boss";}
     else if(has(n,"Dreadnought")||has(n,"BulwarkBody")||has(n,"Juggernaut")||n=="sSeraph"||n=="sScion"||n=="sDweller"||n=="sSpitfire"){w=64;h=72;c="boss";}
     else if(has(n,"StarEater")){w=84;h=84;c="boss";}
     else if(has(n,"Eclipse")||has(n,"Warbringer")){w=52;h=52;c="boss";}
@@ -265,6 +276,8 @@ static Bytes decode_rle(const Bytes&in,size_t expected) {
         else{require(p+n*3<=in.size(),"Truncated RLE literal");out.insert(out.end(),in.begin()+p,in.begin()+p+n*3);p+=n*3;}}
     require(out.size()==expected,"RLE output size mismatch");return out;
 }
+#include "skin_encode.h"
+
 struct PackWriter {
     fs::path dir;Bytes bytes;unsigned id=0;uint64_t total=0;unsigned pack_count=0;
     static constexpr size_t Limit=2u*1024u*1024u;
@@ -278,25 +291,87 @@ static std::set<uint32_t> codepoints(const Bytes&bytes) {
         bool ok=i+extra<=bytes.size();for(unsigned j=0;ok&&j<extra;++j){uint8_t d=bytes[i++];ok=(d&192)==128;cp=(cp<<6)|(d&63);}if(ok&&cp>=32&&cp<=0x10ffff&&cp!=0xfeff)result.insert(cp);}
     return result;
 }
+static void append_var(Bytes& out,uint32_t value) {
+    while(value>=128){out.push_back(uint8_t(value)|128u);value>>=7;}
+    out.push_back(uint8_t(value));
+}
+static Bytes compress_blob(const Bytes& raw,bool force=false) {
+    require(raw.size()<=1048576,"Text/font blob exceeds decoded limit");
+    std::array<uint32_t,65536> table;table.fill(~uint32_t(0));
+    std::vector<uint32_t> previous_at(raw.size(),~uint32_t(0));
+    Bytes encoded;size_t at=0,anchor=0;
+    const auto hash=[&](size_t p){return (blobcodec::u32(raw.data()+p)*2654435761u)>>16;};
+    while(at+4<=raw.size()) {
+        const unsigned slot=hash(at);uint32_t candidate=table[slot],previous=0;
+        previous_at[at]=candidate;table[slot]=uint32_t(at);size_t length=0;
+        for(unsigned attempt=0;attempt<48&&candidate<at&&at-candidate<=65535;++attempt){
+            if(std::memcmp(raw.data()+candidate,raw.data()+at,4)==0){
+                size_t found=4;while(at+found<raw.size()&&raw[candidate+found]==raw[at+found])++found;
+                if(found>length){length=found;previous=candidate;}
+                if(at+found==raw.size())break;
+            }
+            candidate=previous_at[candidate];
+        }
+        if(length<5){++at;continue;}
+        append_var(encoded,uint32_t(at-anchor));encoded.insert(encoded.end(),raw.begin()+anchor,raw.begin()+at);
+        append_var(encoded,uint32_t(length));const unsigned distance=unsigned(at-previous);
+        encoded.push_back(uint8_t(distance));encoded.push_back(uint8_t(distance>>8));
+        const size_t finish=at+length;
+        for(size_t pos=at+1;pos<finish&&pos+4<=raw.size();++pos){const unsigned h=hash(pos);previous_at[pos]=table[h];table[h]=uint32_t(pos);}
+        at=finish;anchor=at;
+    }
+    append_var(encoded,uint32_t(raw.size()-anchor));encoded.insert(encoded.end(),raw.begin()+anchor,raw.end());append_var(encoded,0);
+    if(!force&&encoded.size()+sizeof(blobcodec::Header)>=raw.size())return raw;
+    blobcodec::Header h{};std::memcpy(h.magic,"NNOVAZ1\0",8);h.version=1;h.decoded_bytes=uint32_t(raw.size());h.encoded_bytes=uint32_t(encoded.size());h.decoded_crc32=crc32(raw.data(),raw.size());
+    Bytes out;append(out,h);out.insert(out.end(),encoded.begin(),encoded.end());return out;
+}
+static Bytes expand_blob(const Bytes& source) {
+    if(!blobcodec::is_compressed(source.data(),source.size()))return source;
+    require(source.size()>=sizeof(blobcodec::Header),"Truncated compressed blob");
+    const uint32_t size=blobcodec::u32(source.data()+12);require(size<=1048576,"Compressed blob exceeds decoded limit");
+    Bytes out(size);size_t actual=0;require(blobcodec::decode(source.data(),source.size(),out.data(),out.size(),actual)&&actual==out.size(),"Compressed blob bounds/CRC failure");return out;
+}
 struct FontHeader {char magic[8];uint32_t version,count,pixel_height,line_height,records_offset,pixels_offset,file_bytes;};
 struct GlyphRecord {uint32_t codepoint,offset;uint16_t width,height;int16_t bearing_x,bearing_y,advance;uint16_t reserved;};
 static_assert(sizeof(FontHeader)==36&&sizeof(GlyphRecord)==20,"Font layout");
-static unsigned write_font(const fs::path&font_path,const Bytes&locale,const fs::path&out) {
-    Bytes data=read_file(font_path);stbtt_fontinfo info{};int offset=stbtt_GetFontOffsetForIndex(data.data(),0);
-    require(offset>=0&&stbtt_InitFont(&info,data.data(),offset),"Cannot initialize original game font: "+font_path.u8string());
-    auto points=codepoints(locale);
-    // Native calculator UI has a few words absent from the original PC CSV.
-    if(out.filename().u8string().find(".zhs.")!=std::string::npos) {
-        const std::string extra=NativeUiGlyphs;
-        auto added=codepoints(Bytes(extra.begin(),extra.end()));points.insert(added.begin(),added.end());
-    }
+struct FontFace {Bytes data;stbtt_fontinfo info{};fs::path path;};
+static std::vector<FontFace> font_faces(const fs::path& source) {
+    const char* names[]={"RobotoCondensed-Regular.ttf","03SmartFontUI.ttf","NotoSansKR-Medium.otf","NotoSansSC-Medium.ttf","Taipei Sans TC Beta Regular.ttf"};
+    std::vector<FontFace> faces;faces.reserve(5);
+    for(const char* name:names){faces.emplace_back();auto& face=faces.back();face.path=source/fs::u8path(name);
+        if(!fs::is_regular_file(face.path))continue;
+        face.data=read_file(face.path);int offset=stbtt_GetFontOffsetForIndex(face.data.data(),0);
+        require(offset>=0&&stbtt_InitFont(&face.info,face.data.data(),offset),"Cannot initialize original game font: "+face.path.u8string());
+    }return faces;
+}
+static unsigned write_font(const std::vector<FontFace>& faces,unsigned primary,const std::set<uint32_t>& points,const fs::path& out) {
+    require(primary<faces.size()&&!faces[primary].data.empty(),"Cannot open required original font: "+faces[primary].path.u8string());
     require(points.size()<=8192,"Font needs more than 8192 glyphs");
-    float scale=stbtt_ScaleForPixelHeight(&info,12);std::vector<GlyphRecord> records;Bytes pixels;
-    uint32_t base=uint32_t(sizeof(FontHeader)+points.size()*sizeof(GlyphRecord));
-    for(uint32_t cp:points){int glyph=stbtt_FindGlyphIndex(&info,int(cp));if(!glyph)glyph=stbtt_FindGlyphIndex(&info,'?');int w,h,x,y,advance,bearing;stbtt_GetGlyphHMetrics(&info,glyph,&advance,&bearing);unsigned char*bitmap=stbtt_GetGlyphBitmap(&info,scale,scale,glyph,&w,&h,&x,&y);
-        require(w>=0&&h>=0&&w<256&&h<256,"Unexpected font glyph size");GlyphRecord g{cp,base+uint32_t(pixels.size()),uint16_t(w),uint16_t(h),int16_t(x),int16_t(-y),int16_t(std::max(1,int(std::lround(advance*scale)))),0};records.push_back(g);if(w&&h){require(bitmap,"Font rasterization failed");pixels.insert(pixels.end(),bitmap,bitmap+w*h);}stbtt_FreeBitmap(bitmap,nullptr);}
-    FontHeader header{};std::memcpy(header.magic,"NNOVAF1\0",8);header.version=1;header.count=uint32_t(records.size());header.pixel_height=12;header.line_height=14;header.records_offset=sizeof(header);header.pixels_offset=base;header.file_bytes=base+uint32_t(pixels.size());
-    Bytes file;append(file,header);for(const auto&g:records)append(file,g);file.insert(file.end(),pixels.begin(),pixels.end());require(file.size()<=1048576,"Font exceeds 1 MiB cache");write_file(out,file);std::cout<<"  "<<out.filename().u8string()<<": "<<records.size()<<" glyphs, "<<file.size()<<" bytes\n";return unsigned(records.size());
+    std::vector<GlyphRecord> records;Bytes pixels;unsigned fallback_count=0;
+    const uint32_t base=uint32_t(sizeof(FontHeader)+points.size()*sizeof(GlyphRecord));
+    for(uint32_t cp:points){
+        unsigned selected=primary;int glyph=stbtt_FindGlyphIndex(&faces[primary].info,int(cp));
+        if(!glyph){for(unsigned i=0;i<faces.size();++i)if(!faces[i].data.empty()&&(glyph=stbtt_FindGlyphIndex(&faces[i].info,int(cp)))){selected=i;break;}}
+        // The replacement character is deliberately represented by a question
+        // mark if none of the supplied fonts contains U+FFFD. Other missing
+        // visible characters are an error, never silently baked as '?'.
+        if(!glyph&&cp==0xfffd){selected=primary;glyph=stbtt_FindGlyphIndex(&faces[primary].info,'?');}
+        const bool invisible=cp==0x200b||cp==0x200c||cp==0x200d||cp==0x2060||cp==0xfe0e||cp==0xfe0f;
+        if(!glyph&&invisible){records.push_back({cp,base+uint32_t(pixels.size()),0,0,0,0,0,0});continue;}
+        if(!glyph){std::ostringstream problem;problem<<"No original font glyph for U+"<<std::hex<<std::uppercase<<cp<<" in "<<out.filename().u8string();throw std::runtime_error(problem.str());}
+        if(selected!=primary)++fallback_count;
+        const auto& info=faces[selected].info;const float scale=stbtt_ScaleForMappingEmToPixels(&info,14);
+        int w,h,x,y,advance,bearing;stbtt_GetGlyphHMetrics(&info,glyph,&advance,&bearing);
+        unsigned char* bitmap=stbtt_GetGlyphBitmap(&info,scale,scale,glyph,&w,&h,&x,&y);
+        require(w>=0&&h>=0&&w<256&&h<256,"Unexpected font glyph size");
+        records.push_back({cp,base+uint32_t(pixels.size()),uint16_t(w),uint16_t(h),int16_t(x),int16_t(-y),int16_t(std::max(0,int(std::lround(advance*scale)))),0});
+        if(w&&h){require(bitmap,"Font rasterization failed");pixels.insert(pixels.end(),bitmap,bitmap+w*h);}stbtt_FreeBitmap(bitmap,nullptr);
+    }
+    FontHeader h{};std::memcpy(h.magic,"NNOVAF1\0",8);h.version=1;h.count=uint32_t(records.size());h.pixel_height=14;h.line_height=16;h.records_offset=sizeof(h);h.pixels_offset=base;h.file_bytes=base+uint32_t(pixels.size());
+    Bytes file;append(file,h);for(const auto& g:records)append(file,g);file.insert(file.end(),pixels.begin(),pixels.end());
+    require(file.size()<=1048576,"Font exceeds 1 MiB cache");const Bytes stored=compress_blob(file);require(expand_blob(stored)==file,"Font compression mismatch");write_file(out,stored);
+    std::cout<<"  "<<out.filename().u8string()<<": "<<records.size()<<" glyphs, "<<stored.size()<<" bytes ("<<file.size()<<" decoded; "<<fallback_count<<" original-font fallbacks)\n";
+    return unsigned(records.size());
 }
 static std::vector<std::vector<std::string>> parse_csv(const Bytes&b){std::vector<std::vector<std::string>>rows;std::vector<std::string>row;std::string cell;bool quoted=false;size_t p=(b.size()>=3&&b[0]==239&&b[1]==187&&b[2]==191)?3:0;
     for(;p<b.size();++p){char c=char(b[p]);if(c=='"'){if(quoted&&p+1<b.size()&&b[p+1]=='"'){cell+='"';++p;}else quoted=!quoted;}else if(c==','&&!quoted){row.push_back(cell);cell.clear();}else if((c=='\n'||c=='\r')&&!quoted){if(c=='\r'&&p+1<b.size()&&b[p+1]=='\n')++p;row.push_back(cell);cell.clear();rows.push_back(row);row.clear();}else cell+=c;}
@@ -304,9 +379,138 @@ static std::vector<std::vector<std::string>> parse_csv(const Bytes&b){std::vecto
 }
 struct TextHeader {char magic[8];uint32_t version,count,records_offset,strings_offset,file_bytes;};
 struct TextRecord {uint32_t key_offset,value_offset;};
-static void write_text_pack(const Bytes&csv,const fs::path&path){std::map<std::string,std::string>entries;for(const auto&row:parse_csv(csv))if(row.size()>=2&&!row[0].empty()&&row[0]!="key")entries[row[0]]=row[1];
-    TextHeader h{};std::memcpy(h.magic,"NNOVAL1\0",8);h.version=1;h.count=uint32_t(entries.size());h.records_offset=sizeof(h);h.strings_offset=h.records_offset+h.count*sizeof(TextRecord);std::vector<TextRecord>rs;Bytes strings;
-    for(const auto&e:entries){TextRecord r{h.strings_offset+uint32_t(strings.size()),0};strings.insert(strings.end(),e.first.begin(),e.first.end());strings.push_back(0);r.value_offset=h.strings_offset+uint32_t(strings.size());strings.insert(strings.end(),e.second.begin(),e.second.end());strings.push_back(0);rs.push_back(r);}h.file_bytes=h.strings_offset+uint32_t(strings.size());Bytes out;append(out,h);for(const auto&r:rs)append(out,r);out.insert(out.end(),strings.begin(),strings.end());write_file(path,out);}
+using TextEntries=std::map<std::string,std::string>;
+static TextEntries text_entries(const Bytes& csv) {
+    TextEntries entries;for(const auto& row:parse_csv(csv))if(row.size()>=2&&!row[0].empty()&&row[0]!="key")entries[row[0]]=row[1];return entries;
+}
+static void write_text_pack(const TextEntries& entries,const fs::path& path){
+    TextHeader h{};std::memcpy(h.magic,"NNOVAL1\0",8);h.version=1;h.count=uint32_t(entries.size());h.records_offset=sizeof(h);h.strings_offset=h.records_offset+h.count*sizeof(TextRecord);std::vector<TextRecord> rs;Bytes strings;
+    for(const auto& e:entries){TextRecord r{h.strings_offset+uint32_t(strings.size()),0};strings.insert(strings.end(),e.first.begin(),e.first.end());strings.push_back(0);r.value_offset=h.strings_offset+uint32_t(strings.size());strings.insert(strings.end(),e.second.begin(),e.second.end());strings.push_back(0);rs.push_back(r);}
+    h.file_bytes=h.strings_offset+uint32_t(strings.size());Bytes out;append(out,h);for(const auto& r:rs)append(out,r);out.insert(out.end(),strings.begin(),strings.end());
+    require(out.size()<=384u*1024u,"Language dictionary exceeds runtime capacity");const Bytes stored=compress_blob(out);require(expand_blob(stored)==out,"Language compression mismatch");write_file(path,stored);
+    std::cout<<"  "<<path.filename().u8string()<<": "<<entries.size()<<" strings, "<<stored.size()<<" bytes ("<<out.size()<<" decoded)\n";
+}
+
+#include "credits_order.inc"
+// Read only the source STRG chunk, including in --localization-only mode.
+// Native draw references establish the order; the converter never needs the EXE.
+static std::vector<std::string> read_credit_names(const fs::path& source) {
+    const fs::path path=source/"data.win";
+    std::ifstream file(path,std::ios::binary|std::ios::ate);
+    require(bool(file),"Cannot open credits source: "+path.u8string());
+    const auto length=file.tellg();
+    require(length>=8&&uint64_t(length)<0x80000000ull,"Invalid credits source size");
+    Bytes head(8);file.seekg(0);file.read(reinterpret_cast<char*>(head.data()),8);
+    require(bool(file)&&std::memcmp(head.data(),"FORM",4)==0,"Invalid credits source FORM");
+    const uint64_t total=uint64_t(length);
+    require(uint64_t(Reader{head}.u32(4))+8<=total,"Truncated credits source FORM");
+    for(uint64_t pos=8;pos+8<=total;){
+        file.seekg(std::streamoff(pos));file.read(reinterpret_cast<char*>(head.data()),8);
+        require(bool(file),"Cannot read credits source chunk");
+        const uint32_t bytes=Reader{head}.u32(4);
+        require(bytes<=total-pos-8,"Truncated credits source chunk");
+        if(std::memcmp(head.data(),"STRG",4)==0){
+            require(bytes<=64u*1024u*1024u,"Credits source string table exceeds limit");
+            Bytes data(bytes);file.read(reinterpret_cast<char*>(data.data()),bytes);
+            require(bool(file),"Cannot read credits source strings");
+            Reader r{data};const uint32_t count=r.u32(0);
+            require(count<=1000000u&&uint64_t(count)*4+4<=data.size(),"Invalid credits string count");
+            const auto string_at=[&](uint32_t i){
+                require(i<count,"Missing original credits string");
+                uint64_t pointer=r.u32(4+uint64_t(i)*4);
+                require(pointer>=pos+8,"Invalid original credits string pointer");
+                pointer-=pos+8;const uint32_t size=r.u32(pointer);r.range(pointer+4,uint64_t(size)+1);
+                require(data[size_t(pointer)+4+size]==0,"Unterminated original credits string");
+                return std::string(reinterpret_cast<const char*>(data.data()+pointer+4),size);
+            };
+            for(uint32_t i=0;i<count;++i)if(string_at(i)=="Jeffrey Nielson"){
+                require(i+214u<=count,"Incomplete original credits list");
+                std::vector<std::string> names;Bytes fingerprint;
+                for(uint32_t k=0;k<214;++k){
+                    if(k)fingerprint.push_back(0);
+                    names.push_back(string_at(i+k));
+                    fingerprint.insert(fingerprint.end(),names.back().begin(),names.back().end());
+                }
+                require(crc32(fingerprint.data(),fingerprint.size())==0xf63ef4a5u,
+                    "Original credits layout differs from supported Nova Drift v1.2.38.4");
+                return names;
+            }
+            throw std::runtime_error("Original credits anchor is missing from data.win");
+        }
+        pos+=uint64_t(bytes)+8;
+    }
+    throw std::runtime_error("Original credits STRG chunk is missing");
+}
+static std::string credits_text(const TextEntries& entries,const std::vector<std::string>& names){
+    std::string text;
+    for(const auto& row:CreditSourceRows){
+        if(row.name_index<0){
+            if(std::strcmp(row.section,"CreditsTitle")==0)continue;
+            const auto found=entries.find(row.section);
+            require(found!=entries.end(),"Missing original credits heading: "+std::string(row.section));
+            if(!text.empty())text.push_back('\n');
+            text.push_back(char(27));text.push_back('B');text+=found->second;
+            text.push_back(char(27));text.push_back('W');text.push_back('\n');
+        }else{
+            require(unsigned(row.name_index)<names.size(),"Invalid original credits order");
+            text+=names[size_t(row.name_index)];text.push_back('\n');
+        }
+    }
+    return text;
+}
+
+struct LocalizationStats {unsigned languages=0,fonts=0,glyphs=0;};
+static LocalizationStats write_localizations(const fs::path& source,const fs::path& output,uint32_t mask) {
+    const char* files[]={"localization.csv","german.csv","spanish.csv","french.csv","japanese.csv","korean.csv","brazilianPortuguese.csv","russian.csv","polish.csv","chineseSimplified.csv","chineseTraditional.csv"};
+    const TextEntries english=text_entries(read_file(source/files[0]));
+    const auto credit_names=read_credit_names(source);
+    std::array<std::set<uint32_t>,5> glyphs;std::array<bool,5> used{};LocalizationStats stats;
+    const unsigned groups[]={0,0,0,0,1,2,0,0,0,3,4};
+    Bytes common;
+    const fs::path changelog_path=source/"changelog.txt";
+    if(fs::is_regular_file(changelog_path)){
+        const Bytes original=read_file(changelog_path);std::string log;
+        size_t first=original.size()>=3&&original[0]==239&&original[1]==187&&original[2]==191?3:0;
+        for(size_t i=first;i<original.size();++i){char c=char(original[i]);if(c=='\r'){if(i+1<original.size()&&original[i+1]=='\n')continue;c='\n';}log.push_back(c);}
+        write_text_pack(TextEntries{{"OwnerChangelog",log}},output/"nNova.changelog.dat.tns");
+        common.insert(common.end(),log.begin(),log.end());common.push_back('\n');
+    }else fs::remove(output/"nNova.changelog.dat.tns");
+    const auto add=[&](const char* text){common.insert(common.end(),text,text+std::strlen(text));common.push_back('\n');};
+    for(const char* name:native_text::LanguageNames)add(name);
+    const fs::path skin_names=source/"custom_skins"/"custom_skins.csv";
+    if(fs::is_regular_file(skin_names)){require(fs::file_size(skin_names)<=1048576,"Skin metadata exceeds 1 MiB");const Bytes names=read_file(skin_names);common.insert(common.end(),names.begin(),names.end());common.push_back('\n');}
+    add("×±∞°−→←↑↓•…");
+    auto common_points=codepoints(common);
+    for(unsigned lang=0;lang<native_text::LanguageCount;++lang){
+        const fs::path destination=output/(std::string("nNova.")+native_text::LanguageCodes[lang]+".locale.dat.tns");
+        if(!(mask&(1u<<lang))||!fs::is_regular_file(source/files[lang])){fs::remove(destination);continue;}
+        TextEntries entries=english;
+        for(const auto& entry:text_entries(read_file(source/files[lang])))if(!entry.second.empty())entries[entry.first]=entry.second;
+        for(const auto& entry:native_text::entries)entries[entry.key]=entry.values[lang];
+        entries["OwnerCredits"]=credits_text(entries,credit_names);
+        write_text_pack(entries,destination);++stats.languages;
+        Bytes text;for(const auto& entry:entries){text.insert(text.end(),entry.second.begin(),entry.second.end());text.push_back('\n');}
+        if(lang==9){const std::string old_ui=NativeUiGlyphs;text.insert(text.end(),old_ui.begin(),old_ui.end());}
+        auto points=codepoints(text);auto& target=glyphs[groups[lang]];target.insert(points.begin(),points.end());target.insert(common_points.begin(),common_points.end());used[groups[lang]]=true;
+    }
+    const auto faces=font_faces(source);const char* groups_names[]={"lat","jpn","kor","zhs","zht"};
+    for(unsigned i=0;i<5;++i){fs::path path=output/(std::string("nNova.")+groups_names[i]+".font.dat.tns");if(used[i]){stats.glyphs+=write_font(faces,i,glyphs[i],path);++stats.fonts;}else fs::remove(path);}
+    for(unsigned i:{0u,1u,2u,3u,6u,7u,8u})fs::remove(output/(std::string("nNova.")+native_text::LanguageCodes[i]+".font.dat.tns"));
+    for(const char* license:{"Roboto_LICENSE.txt","03SmartFontUI_IPA_Font_License_Agreement_v1.0.txt","NotoSansKR-Medium_OFL.txt","NotoSansSC-Medium_OFL.txt","Tapei Sans SIL.txt"})if(fs::is_regular_file(source/license))fs::copy_file(source/license,output/license,fs::copy_options::overwrite_existing);
+    return stats;
+}
+
+
+static void update_localization_report(const fs::path& output,const LocalizationStats& stats) {
+    const fs::path path=output/"conversion-report.txt";
+    std::string previous;
+    if(fs::is_regular_file(path)){require(fs::file_size(path)<=65536,"Conversion report exceeds 64 KiB");const Bytes bytes=read_file(path);previous.assign(bytes.begin(),bytes.end());}
+    std::istringstream input(previous);std::ostringstream report;std::string line;
+    while(std::getline(input,line))if(line.rfind("Glyphs across shared font groups:",0)!=0&&line.rfind("Localization:",0)!=0)report<<line<<'\n';
+    if(previous.empty())report<<"nNova localization update report\n";
+    report<<"Glyphs across shared font groups: "<<stats.glyphs<<"\nLocalization: "<<stats.languages<<" languages, "<<stats.fonts<<" font groups; 14px EM/16px line; lossless load-time LZ envelope\n";
+    const std::string text=report.str();write_file(path,Bytes(text.begin(),text.end()));
+}
 
 template<class T> static T object_at(const Bytes&b,size_t p) {
     require(p<=b.size()&&sizeof(T)<=b.size()-p,"Truncated binary record");
@@ -314,7 +518,7 @@ template<class T> static T object_at(const Bytes&b,size_t p) {
 }
 static void verify_pack(const fs::path&dir) {
     Bytes index=read_file(dir/"nNova.dat.tns");auto h=object_at<pack::CommonHeader>(index,0);
-    require(std::memcmp(h.magic,"NNOVAC1\0",8)==0&&h.version==pack::Version,"Invalid index magic/version");
+    require(std::memcmp(h.magic,"NNOVAC1\0",8)==0&&pack::supported_version(h.version),"Invalid index magic/version");
     require(h.file_bytes==index.size()&&h.sprite_count<=pack::MaxSprites&&h.frame_count<=pack::MaxFrames&&h.pack_count<=pack::MaxPacks,"Invalid index counts/size");
     require(h.sprite_offset==sizeof(h)&&h.frame_offset==h.sprite_offset+h.sprite_count*sizeof(pack::SpriteRecord)&&h.file_bytes==h.frame_offset+h.frame_count*sizeof(pack::FrameRecord),"Invalid index layout");
     require(h.index_crc32==crc32(index.data()+sizeof(h),index.size()-sizeof(h)),"Index CRC mismatch");
@@ -322,16 +526,17 @@ static void verify_pack(const fs::path&dir) {
     for(unsigned i=0;i<h.sprite_count;++i){auto s=object_at<pack::SpriteRecord>(index,h.sprite_offset+i*sizeof(pack::SpriteRecord));require(s.name[63]==0&&s.name[0]&&(!i||previous<s.name),"Sprite names are not sorted/terminated");previous=s.name;require(s.first_frame==total_frames&&s.frame_count&&s.frame_count<=h.frame_count-total_frames,"Invalid sprite frame range");total_frames+=s.frame_count;}
     require(total_frames==h.frame_count,"Unreferenced frame records");
     std::vector<Bytes> packs;
-    for(unsigned i=0;i<h.pack_count;++i){char name[64];std::snprintf(name,sizeof(name),"nNova.gfx%02u.dat.tns",i);Bytes b=read_file(dir/name);auto p=object_at<pack::DataHeader>(b,0);require(std::memcmp(p.magic,"NNOVAP1\0",8)==0&&p.version==pack::Version&&p.index==i&&p.file_bytes==b.size()&&b.size()<=PackWriter::Limit,"Invalid graphics pack header");require(p.payload_crc32==crc32(b.data()+sizeof(p),b.size()-sizeof(p)),"Graphics pack CRC mismatch");packs.push_back(std::move(b));}
-    for(unsigned i=0;i<h.frame_count;++i){auto f=object_at<pack::FrameRecord>(index,h.frame_offset+i*sizeof(pack::FrameRecord));require(f.pack<packs.size()&&f.width&&f.height&&f.width<=320&&f.height<=240&&f.canvas_width&&f.canvas_height,"Invalid frame geometry");require(f.decoded_bytes==uint32_t(f.width)*f.height*3&&f.codec<=pack::Rle565A8,"Invalid frame codec/size");const Bytes&b=packs[f.pack];require(f.offset>=sizeof(pack::DataHeader)&&f.offset<=b.size()&&f.stored_bytes<=b.size()-f.offset,"Frame points outside graphics pack");Bytes payload(b.begin()+f.offset,b.begin()+f.offset+f.stored_bytes);if(f.codec==pack::Raw565A8)require(payload.size()==f.decoded_bytes,"Raw pixel length mismatch");else decode_rle(payload,f.decoded_bytes);}
+    for(unsigned i=0;i<h.pack_count;++i){char name[64];std::snprintf(name,sizeof(name),"nNova.gfx%02u.dat.tns",i);Bytes b=read_file(dir/name);auto p=object_at<pack::DataHeader>(b,0);require(std::memcmp(p.magic,"NNOVAP1\0",8)==0&&p.version==h.version&&p.index==i&&p.file_bytes==b.size()&&b.size()<=PackWriter::Limit,"Invalid graphics pack header");require(p.payload_crc32==crc32(b.data()+sizeof(p),b.size()-sizeof(p)),"Graphics pack CRC mismatch");packs.push_back(std::move(b));}
+    for(unsigned i=0;i<h.frame_count;++i){auto f=object_at<pack::FrameRecord>(index,h.frame_offset+i*sizeof(pack::FrameRecord));require(f.pack<packs.size()&&f.width&&f.height&&f.width<=320&&f.height<=240&&f.canvas_width&&f.canvas_height,"Invalid frame geometry");require(f.decoded_bytes==uint32_t(f.width)*f.height*3&&pack::supported_codec(f.codec,h.version),"Invalid frame codec/size");const Bytes&b=packs[f.pack];require(f.offset>=sizeof(pack::DataHeader)&&f.offset<=b.size()&&f.stored_bytes<=b.size()-f.offset,"Frame points outside graphics pack");Bytes payload(b.begin()+f.offset,b.begin()+f.offset+f.stored_bytes);require(nova::codec::decode_image(payload,f.codec,f.decoded_bytes).size()==f.decoded_bytes,"Invalid image codec stream");}
     unsigned fonts=0,languages=0;
     for(const auto&entry:fs::directory_iterator(dir)){std::string n=entry.path().filename().u8string();
-        if(has(n,".font.dat.tns")){Bytes b=read_file(entry.path());auto f=object_at<FontHeader>(b,0);require(std::memcmp(f.magic,"NNOVAF1\0",8)==0&&f.version==1&&f.count<=8192&&f.records_offset==sizeof(f)&&f.pixels_offset==f.records_offset+f.count*sizeof(GlyphRecord)&&f.file_bytes==b.size()&&f.file_bytes<=1048576,"Invalid font pack");uint32_t last=0;
+        if(has(n,".font.dat.tns")){Bytes b=expand_blob(read_file(entry.path()));auto f=object_at<FontHeader>(b,0);require(std::memcmp(f.magic,"NNOVAF1\0",8)==0&&f.version==1&&f.count<=8192&&f.records_offset==sizeof(f)&&f.pixels_offset==f.records_offset+f.count*sizeof(GlyphRecord)&&f.file_bytes==b.size()&&f.file_bytes<=1048576,"Invalid font pack");uint32_t last=0;
             for(unsigned i=0;i<f.count;++i){auto g=object_at<GlyphRecord>(b,f.records_offset+i*sizeof(GlyphRecord));require((!i||g.codepoint>last)&&g.offset>=f.pixels_offset&&g.offset<=b.size()&&uint64_t(g.width)*g.height<=b.size()-g.offset,"Invalid glyph record");last=g.codepoint;}++fonts;
-        }else if(has(n,".locale.dat.tns")){Bytes b=read_file(entry.path());Reader r{b};auto t=object_at<TextHeader>(b,0);require(std::memcmp(t.magic,"NNOVAL1\0",8)==0&&t.version==1&&t.count<=65536&&t.records_offset==sizeof(t)&&t.strings_offset==t.records_offset+t.count*sizeof(TextRecord)&&t.file_bytes==b.size(),"Invalid locale pack");std::string previous_key;
-            for(unsigned i=0;i<t.count;++i){auto v=object_at<TextRecord>(b,t.records_offset+i*sizeof(TextRecord));require(v.key_offset>=t.strings_offset&&v.value_offset>=t.strings_offset,"Invalid locale pointer");std::string key=r.str(v.key_offset);r.str(v.value_offset);require(!i||previous_key<key,"Locale keys are not sorted");previous_key=key;}++languages;
+        }else if(has(n,".locale.dat.tns")||n=="nNova.changelog.dat.tns"){Bytes b=expand_blob(read_file(entry.path()));Reader r{b};auto t=object_at<TextHeader>(b,0);require(std::memcmp(t.magic,"NNOVAL1\0",8)==0&&t.version==1&&t.count<=65536&&t.records_offset==sizeof(t)&&t.strings_offset==t.records_offset+t.count*sizeof(TextRecord)&&t.file_bytes==b.size(),"Invalid locale pack");std::string previous_key;
+            for(unsigned i=0;i<t.count;++i){auto v=object_at<TextRecord>(b,t.records_offset+i*sizeof(TextRecord));require(v.key_offset>=t.strings_offset&&v.value_offset>=t.strings_offset,"Invalid locale pointer");std::string key=r.str(v.key_offset);r.str(v.value_offset);require(!i||previous_key<key,"Locale keys are not sorted");previous_key=key;}if(n!="nNova.changelog.dat.tns")++languages;
         }
     }
+    verify_skins(dir);
     std::cout<<"Verified "<<h.sprite_count<<" sprites, "<<h.frame_count<<" frames, "<<h.pack_count<<" graphics packs, "<<fonts<<" fonts, "<<languages<<" languages.\n";
 }
 static void self_test() {
@@ -341,15 +546,52 @@ static void self_test() {
     bool rejected=false;try{decode_rle(Bytes{255,0,0},384);}catch(const std::runtime_error&){rejected=true;}require(rejected,"Truncated repeat was not rejected");
     rejected=false;try{decode_rle(Bytes{127,0,0,0},384);}catch(const std::runtime_error&){rejected=true;}require(rejected,"Truncated literal was not rejected");
     const std::string csv="key,English\r\nExample,\"line, with \"\"quotes\"\"\"\r\n";auto rows=parse_csv(Bytes(csv.begin(),csv.end()));require(rows.size()==2&&rows[1].size()==2&&rows[1][1]=="line, with \"quotes\"","CSV quoting test failed");
-    std::cout<<"Self-test passed: "<<cases<<" codec patterns, malformed streams, CRC and CSV quoting.\n";
+    for(unsigned i=0;i<300;++i){
+        Bytes raw;const size_t size=i<64?i:size_t(i*199);
+        for(size_t j=0;j<size;++j){state^=state<<13;state^=state>>17;state^=state<<5;raw.push_back(uint8_t(i%3==0?state:i%3==1?j%47:(j/191)%7));}
+        const Bytes coded=compress_blob(raw,true);require(expand_blob(coded)==raw,"Font/text LZ round-trip failed");
+        if(coded.size()>sizeof(blobcodec::Header)){
+            Bytes damaged=coded;damaged.back()^=0x80;Bytes dst(raw.size());size_t written=0;
+            require(!blobcodec::decode(damaged.data(),damaged.size(),dst.data(),dst.size(),written),"Damaged LZ envelope was accepted");
+            require(!blobcodec::decode(coded.data(),coded.size()-1,dst.data(),dst.size(),written),"Truncated LZ envelope was accepted");
+        }
+    }
+    for(unsigned mode=0;mode<4;++mode)for(unsigned count=1;count<=1024;count+=31){
+        Bytes raw;for(unsigned i=0;i<count;++i){state^=state<<13;state^=state>>17;state^=state<<5;const unsigned color=state%(mode%2?211:13);const uint16_t rgb=uint16_t(color*271);const uint8_t alpha=uint8_t(mode<2?color*7:state>>16);raw.push_back(uint8_t(rgb));raw.push_back(uint8_t(rgb>>8));raw.push_back(alpha);}
+        Bytes coded=encode_rle(raw);uint16_t kind=pack::Rle565A8;if(coded.size()>=raw.size()){coded=raw;kind=pack::Raw565A8;}nova::codec::select_image_encoding(raw,coded,kind);
+        require(nova::codec::decode_image(coded,kind,raw.size())==raw,"Exact palette round-trip failed");
+    }
+    std::cout<<"Self-test passed: "<<cases<<" image codec patterns, 300 text/font LZ cases, malformed streams, CRC and CSV quoting.\n";
 }
-struct Options {fs::path source=".",output;bool verify=false,all_locales=false;unsigned compact=0;};
-static Options options(int argc,char**argv){Options o;bool source=false;for(int i=1;i<argc;++i){std::string a=argv[i];if(a=="--help"||a=="-h"){std::cout<<"nNova converter - run beside your own Nova Drift data.win\n\nUsage: converter [GAME_DIRECTORY] [--output DIRECTORY] [--verify]\n                 [--all-locales] [--compact-animation MAX_FRAMES]\n\nDefault output: GAME_DIRECTORY/nNova/data\nNo source argument: find data.win in CWD, then beside this executable.\nDefault languages: English and Simplified Chinese.\nDefault conversion preserves every animation frame.\nAlso: converter --verify-pack DIRECTORY | converter --self-test\nNo Python, GameMaker runner, network, or game executable is needed.\n";std::exit(0);}else if(a=="--output"){require(++i<argc,"--output needs a directory");o.output=input_path(argv[i]);}else if(a=="--verify")o.verify=true;else if(a=="--all-locales")o.all_locales=true;else if(a=="--full-animation")o.compact=0;else if(a=="--compact-animation"){require(++i<argc,"--compact-animation needs a frame limit");o.compact=unsigned(std::stoul(argv[i]));require(o.compact>=2&&o.compact<=4096,"Frame limit must be 2..4096");}else if(!a.empty()&&a[0]=='-')throw std::runtime_error("Unknown option: "+a);else{require(!source,"Only one game directory is accepted");o.source=input_path(argv[i]);source=true;}}if(!source&&!fs::is_regular_file(o.source/"data.win")){fs::path beside=executable_path(argv[0]).parent_path();if(fs::is_regular_file(beside/"data.win"))o.source=beside;}if(o.output.empty())o.output=o.source/"nNova"/"data";return o;}
+struct Options {fs::path source=".",output;bool verify=false,localization_only=false;uint32_t language_mask=(1u<<native_text::LanguageCount)-1;unsigned compact=0;};
+static Options options(int argc,char**argv){Options o;bool source=false;
+    for(int i=1;i<argc;++i){std::string a=argv[i];
+        if(a=="--help"||a=="-h"){
+            std::cout<<"nNova converter - run beside your own Nova Drift data.win\n\nUsage: converter [GAME_DIRECTORY] [--output DIRECTORY] [--verify]\n                 [--languages eng,zhs,...] [--compact-animation MAX_FRAMES]\n\nDefault output: GAME_DIRECTORY/nNova/data\nNo source argument: find data.win in CWD, then beside this executable.\nDefault languages: all 11 original languages; shared Latin/Cyrillic font.\nDefault conversion preserves every animation frame.\nFont and text compression is lossless; decoded once when loading a language.\nAlso: --localization-only | --verify-pack DIRECTORY | --self-test\nNo Python, GameMaker runner, network, or game executable is needed.\n";std::exit(0);
+        }else if(a=="--output"){require(++i<argc,"--output needs a directory");o.output=input_path(argv[i]);}
+        else if(a=="--verify")o.verify=true;
+        else if(a=="--localization-only")o.localization_only=true;
+        else if(a=="--all-locales")o.language_mask=(1u<<native_text::LanguageCount)-1;
+        else if(a=="--languages"){
+            require(++i<argc,"--languages needs comma-separated language codes");o.language_mask=0;std::istringstream input(argv[i]);std::string code;
+            while(std::getline(input,code,',')){bool found=false;for(unsigned l=0;l<native_text::LanguageCount;++l)if(code==native_text::LanguageCodes[l]){o.language_mask|=1u<<l;found=true;break;}require(found,"Unknown language code: "+code);}
+            require(o.language_mask!=0,"Choose at least one language");
+        }else if(a=="--full-animation")o.compact=0;
+        else if(a=="--compact-animation"){require(++i<argc,"--compact-animation needs a frame limit");o.compact=unsigned(std::stoul(argv[i]));require(o.compact>=2&&o.compact<=4096,"Frame limit must be 2..4096");}
+        else if(!a.empty()&&a[0]=='-')throw std::runtime_error("Unknown option: "+a);
+        else{require(!source,"Only one game directory is accepted");o.source=input_path(argv[i]);source=true;}
+    }
+    if(!source&&!fs::is_regular_file(o.source/"data.win")){fs::path beside=executable_path(argv[0]).parent_path();if(fs::is_regular_file(beside/"data.win"))o.source=beside;}
+    if(o.output.empty())o.output=o.source/"nNova"/"data";
+    return o;
+}
 
 static int convert_main(int argc,char**argv)try {
     if(argc==2&&std::string(argv[1])=="--self-test"){self_test();return 0;}
     if(argc==3&&std::string(argv[1])=="--verify-pack"){verify_pack(input_path(argv[2]));return 0;}
-    const Options opt=options(argc,argv);const uint16_t endian=1;require(*reinterpret_cast<const uint8_t*>(&endian)==1,"Converter needs a little-endian computer");
+    const Options opt=options(argc,argv);
+    if(opt.localization_only){require(fs::is_regular_file(opt.output/"nNova.dat.tns"),"--localization-only needs an existing graphics/index output directory");write_skins(opt.source,opt.output);const auto stats=write_localizations(opt.source,opt.output,opt.language_mask);update_localization_report(opt.output,stats);if(opt.verify)verify_pack(opt.output);std::cout<<"Updated "<<stats.languages<<" languages and "<<stats.fonts<<" font groups.\n";return 0;}
+const uint16_t endian=1;require(*reinterpret_cast<const uint8_t*>(&endian)==1,"Converter needs a little-endian computer");
     std::cout<<"nNova resource converter (C++17)\nReading "<<(opt.source/"data.win").u8string()<<"\n";
     GameData game(opt.source/"data.win");fs::create_directories(opt.output);
     require(game.sprites.size()<=pack::MaxSprites,"Too many sprites for this launcher version");
@@ -366,7 +608,8 @@ static int convert_main(int argc,char**argv)try {
     struct Duplicate{Bytes bytes;pack::FrameRecord record;};std::unordered_map<uint64_t,std::vector<Duplicate>> duplicates;
     for(size_t t=0;t<jobs.size();++t){if(jobs[t].empty())continue;auto pixels=decode_dxt5(game,game.textures[t]);
         for(const auto&j:jobs[t]){const auto&s=game.sprites[j.source];Resized image=resize(pixels,game.textures[t],j.page,s,j.scale);Bytes encoded=encode_rle(image.pixels);uint16_t codec=pack::Rle565A8;if(encoded.size()>=image.pixels.size()){encoded=image.pixels;codec=pack::Raw565A8;}
-            if(opt.verify&&codec==pack::Rle565A8)require(decode_rle(encoded,image.pixels.size())==image.pixels,"Lossless codec verification failed");
+            nova::codec::select_image_encoding(image.pixels,encoded,codec);
+            if(opt.verify)require(nova::codec::decode_image(encoded,codec,image.pixels.size())==image.pixels,"Lossless codec verification failed");
             pack::FrameRecord r{};r.decoded_bytes=uint32_t(image.pixels.size());r.width=image.width;r.height=image.height;r.origin_x=image.ox;r.origin_y=image.oy;r.codec=codec;r.canvas_width=uint16_t(std::max(1,int(std::lround(s.width*j.scale.x))));r.canvas_height=uint16_t(std::max(1,int(std::lround(s.height*j.scale.y))));r.original_frame=uint16_t(j.frame);raw_bytes+=image.pixels.size();
             uint64_t key=hash64(encoded)^uint64_t(r.width)<<48^uint64_t(r.height)<<32^uint64_t(codec)<<60;auto&bucket=duplicates[key];bool found=false;
             for(const auto&d:bucket)if(d.bytes==encoded&&d.record.width==r.width&&d.record.height==r.height&&d.record.codec==codec){r.pack=d.record.pack;r.offset=d.record.offset;r.stored_bytes=d.record.stored_bytes;found=true;++duplicate_frames;break;}
@@ -374,20 +617,29 @@ static int convert_main(int argc,char**argv)try {
         }
         if(t%16==0||converted==frames.size())std::cout<<"  texture "<<t+1<<'/'<<game.textures.size()<<": "<<converted<<'/'<<frames.size()<<" frames\n";
     }
-    writer.flush();pack::CommonHeader header{};std::memcpy(header.magic,"NNOVAC1\0",8);header.version=pack::Version;header.sprite_count=uint32_t(sprites.size());header.frame_count=uint32_t(frames.size());header.pack_count=writer.pack_count;header.sprite_offset=sizeof(header);header.frame_offset=header.sprite_offset+header.sprite_count*sizeof(pack::SpriteRecord);header.file_bytes=header.frame_offset+header.frame_count*sizeof(pack::FrameRecord);header.source_bytes=uint32_t(game.bytes.size());header.source_crc32=crc32(game.bytes.data(),game.bytes.size());header.screen_width=320;header.screen_height=240;
-    Bytes index(sizeof(header),0);for(const auto&s:sprites)append(index,s);for(const auto&f:frames)append(index,f);header.index_crc32=crc32(index.data()+sizeof(header),index.size()-sizeof(header));std::memcpy(index.data(),&header,sizeof(header));write_file(opt.output/"nNova.dat.tns",index);
-    std::cout<<"Converting original font and localization files.\n";Bytes english=read_file(opt.source/"localization.csv"),chinese=read_file(opt.source/"chineseSimplified.csv");
-    unsigned eng_glyphs=write_font(opt.source/"RobotoCondensed-Regular.ttf",english,opt.output/"nNova.eng.font.dat.tns");
-    unsigned zhs_glyphs=write_font(opt.source/"NotoSansSC-Medium.ttf",chinese,opt.output/"nNova.zhs.font.dat.tns");
-    const std::pair<const char*,const char*>languages[]={{"localization.csv","eng"},{"chineseSimplified.csv","zhs"},{"chineseTraditional.csv","zht"},{"japanese.csv","jpn"},{"korean.csv","kor"},{"german.csv","deu"},{"french.csv","fra"},{"spanish.csv","spa"},{"russian.csv","rus"},{"polish.csv","pol"},{"brazilianPortuguese.csv","por"}};
-    for(const auto&l:languages) {
-        fs::path destination=opt.output/(std::string("nNova.")+l.second+".locale.dat.tns");
-        bool selected=opt.all_locales||std::string(l.second)=="eng"||std::string(l.second)=="zhs";
-        if(selected&&fs::exists(opt.source/l.first))write_text_pack(read_file(opt.source/l.first),destination);
-        else if(!selected)fs::remove(destination); // remove only our known optional outputs
+    writer.flush();
+    // Decode textures once on the PC, then put stored payloads in sprite/frame
+    // order for the calculator. This changes no pixels or codec bytes and
+    // avoids random flash reads when an animation or catalogue advances.
+    {
+        std::vector<Bytes> original_packs;
+        for(unsigned i=0;i<writer.pack_count;++i){char name[64];std::snprintf(name,sizeof(name),"nNova.gfx%02u.dat.tns",i);original_packs.push_back(read_file(opt.output/name));}
+        PackWriter ordered(opt.output);std::map<uint64_t,pack::FrameRecord> shared;
+        for(auto& frame:frames){
+            const uint64_t key=(uint64_t(frame.pack)<<32)|frame.offset;auto previous=shared.find(key);
+            if(previous!=shared.end()){frame.pack=previous->second.pack;frame.offset=previous->second.offset;frame.stored_bytes=previous->second.stored_bytes;continue;}
+            const auto& old=original_packs[frame.pack];require(frame.offset<=old.size()&&frame.stored_bytes<=old.size()-frame.offset,"Invalid temporary frame range");
+            Bytes bytes(old.begin()+frame.offset,old.begin()+frame.offset+frame.stored_bytes);ordered.add(bytes,frame);shared.emplace(key,frame);
+        }
+        ordered.flush();writer=std::move(ordered);
     }
-    for(const char*license:{"Roboto_LICENSE.txt","NotoSansSC-Medium_OFL.txt"})if(fs::exists(opt.source/license))fs::copy_file(opt.source/license,opt.output/license,fs::copy_options::overwrite_existing);
-    std::ofstream report(opt.output/"conversion-report.txt");report<<"nNova conversion report\nSource: owner-supplied GameMaker data.win\nSource bytes: "<<header.source_bytes<<"\nSource CRC32: "<<std::hex<<std::setw(8)<<std::setfill('0')<<header.source_crc32<<std::dec<<"\nSprites: "<<sprites.size()<<"\nFrames: "<<frames.size()<<"\nUnique stored frames: "<<frames.size()-duplicate_frames<<"\nGraphics packs: "<<writer.pack_count<<"\nIndex bytes: "<<index.size()<<"\nGraphics bytes: "<<writer.total<<"\nUncompressed resized pixels: "<<raw_bytes<<"\nEnglish glyphs: "<<eng_glyphs<<"\nSimplified Chinese glyphs: "<<zhs_glyphs<<"\nTarget: 320 x 240, straight RGB565 plus full 8-bit alpha\nResampling: area filter with premultiplied alpha; only fully transparent borders trimmed\nStorage: lossless adaptive raw/RLE, identical frames shared\nAnimation: "<<(opt.compact?"explicit compact sampling":"all source frames preserved")<<"\nRuntime: decompression only on cache miss, bounded 2 MiB pixel cache\nMusic/audio: intentionally not converted; calculator build has no audio output\nLocalization: "<<(opt.all_locales?"all available CSV languages exported":"English/Simplified Chinese only")<<"; English/Simplified Chinese glyph packs baked\n";
+    for(unsigned i=writer.pack_count;i<pack::MaxPacks;++i){char obsolete[64];std::snprintf(obsolete,sizeof(obsolete),"nNova.gfx%02u.dat.tns",i);fs::remove(opt.output/obsolete);}
+    pack::CommonHeader header{};std::memcpy(header.magic,"NNOVAC1\0",8);header.version=pack::Version;header.sprite_count=uint32_t(sprites.size());header.frame_count=uint32_t(frames.size());header.pack_count=writer.pack_count;header.sprite_offset=sizeof(header);header.frame_offset=header.sprite_offset+header.sprite_count*sizeof(pack::SpriteRecord);header.file_bytes=header.frame_offset+header.frame_count*sizeof(pack::FrameRecord);header.source_bytes=uint32_t(game.bytes.size());header.source_crc32=crc32(game.bytes.data(),game.bytes.size());header.screen_width=320;header.screen_height=240;
+    Bytes index(sizeof(header),0);for(const auto&s:sprites)append(index,s);for(const auto&f:frames)append(index,f);header.index_crc32=crc32(index.data()+sizeof(header),index.size()-sizeof(header));std::memcpy(index.data(),&header,sizeof(header));write_file(opt.output/"nNova.dat.tns",index);
+    std::cout<<"Converting original fonts and all selected localization files.\n";
+    write_skins(opt.source,opt.output);
+    const LocalizationStats locale_stats=write_localizations(opt.source,opt.output,opt.language_mask);
+    std::ofstream report(opt.output/"conversion-report.txt");report<<"nNova conversion report\nSource: owner-supplied GameMaker data.win\nSource bytes: "<<header.source_bytes<<"\nSource CRC32: "<<std::hex<<std::setw(8)<<std::setfill('0')<<header.source_crc32<<std::dec<<"\nSprites: "<<sprites.size()<<"\nFrames: "<<frames.size()<<"\nUnique stored frames: "<<frames.size()-duplicate_frames<<"\nGraphics packs: "<<writer.pack_count<<"\nIndex bytes: "<<index.size()<<"\nGraphics bytes: "<<writer.total<<"\nUncompressed resized pixels: "<<raw_bytes<<"\nGlyphs across shared font groups: "<<locale_stats.glyphs<<"\nTarget: 320 x 240, straight RGB565 plus full 8-bit alpha\nResampling: area filter with premultiplied alpha; only fully transparent borders trimmed\nStorage: lossless adaptive raw/RLE/exact palettes/planar RLE, identical frames shared\nLayout: sprite/frame order, duplicate payloads shared\nAnimation: "<<(opt.compact?"explicit compact sampling":"all source frames preserved")<<"\nRuntime: decompression only on cache miss, bounded 2 MiB pixel cache\nMusic/audio: intentionally not converted; calculator build has no audio output\nLocalization: "<<locale_stats.languages<<" languages, "<<locale_stats.fonts<<" font groups; 14px EM/16px line; lossless load-time LZ envelope\n";
     require(bool(report),"Cannot write conversion report");
     if(opt.verify)verify_pack(opt.output);
     std::cout<<"Done: "<<opt.output.u8string()<<"\nGraphics + index: "<<writer.total+index.size()<<" bytes; "<<duplicate_frames<<" identical frames shared.\nCopy all *.dat.tns files into nNova/data beside nNova.tns.\n";return 0;

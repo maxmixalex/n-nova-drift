@@ -4,10 +4,14 @@
 #include "game.h"
 
 namespace nova {
-// Visual assemblies only: the simulation keeps one collider per enemy.
+// Original component art attached to the simulation's live destructible parts.
 class Composites {
 public:
-    void initialize(Assets* assets);
+    void initialize(Assets* assets,Game* scratch=0);
+    bool core(Canvas&,const Enemy&,int x,int y,int projection,uint32_t tick);
+    bool part(Canvas&,const BossPart&,const Enemy&,int x,int y,int projection,uint32_t tick);
+    bool preview(Canvas&,unsigned enemy,int x,int y,int diameter,uint32_t tick=0);
+    static bool foreground(unsigned kind);
     bool draw(Canvas& canvas, const Enemy& enemy, int x, int y,
               int displayDiameter, uint32_t tick);
 private:
@@ -18,6 +22,10 @@ private:
         uint8_t alpha[MirrorEdge*MirrorEdge];
         bool ready;
     };
+    struct Preview {Enemy enemy;BossPart parts[32];uint8_t count;int16_t center_x,center_y,extent;};
+    Preview previews_[14];
+    uint8_t preview_count_=0;
+    void source(Canvas&,const char* sprite,int x,int y,int sourceScale,uint8_t angle,bool mirror,uint16_t tint=65535,unsigned opacity=255,bool additive=false,unsigned lighting=0,unsigned frame=0);
     Assets* assets_;
     int ids_[PartCapacity];
     int8_t mirror_index_[PartCapacity];

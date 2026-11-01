@@ -1,69 +1,86 @@
-# Runtime and conversion architecture
+# Converter, launcher and resource budgets
 
-## Hardware boundary
+## Execution model
 
-The runtime is freestanding C++ for ARM926EJ-S with the Ndless r2022 syscall ABI.
-It owns a 320×240 RGB565 framebuffer and hands the completed buffer to Ndless's
-LCD blitter. The platform backend provides monotonic time, key transitions,
-absolute touchpad coordinates, bounded file access and temporary/backup save
-replacement. Desktop code uses the same game, UI, renderer and pack readers.
+The calculator runs a native ARM926 Ndless launcher. The standalone C++17
+converter reads the user's Nova Drift installation and exports display-sized
+graphics, localization and fonts. Python is used for developer builds and
+verification; neither distributed converter nor the calculator requires it.
 
-No GameMaker runner, GML interpreter, Python, floating-point simulation or
-general-purpose allocator runs on the calculator. Fixed arrays bound entities
-and image memory. A grid narrows projectile/enemy collision candidates. The
-simulation advances at 30 fixed ticks per second, with a bounded catch-up loop;
-that is a simulation target, not a statement that every physical device renders
-30 frames per second.
+The supplied reference is PC 1.2.38.4. Its data.win contains sprite metadata and
+DXT5 texture pages. Its Windows executable is a native YYC build. Recovered
+constants and control flow are implemented in the calculator simulation; the
+launcher does not execute the desktop executable. See [coverage.md](coverage.md).
 
-## Content pipeline
+## Files on the calculator
 
-The C++ converter reads FORM chunks, sprite metadata, texture-page references,
-DXT5 DDS pages, UTF-8 localization CSVs and the source installation's font files.
-It does not run the PC executable. Bounds, offsets, dimensions and supported
-formats are checked before reads and writes.
+| File or directory | Contents |
+| --- | --- |
+| `nNova.tns` | ARM launcher |
+| `data/nNova.dat.tns` | Shared index and sprite/frame metadata |
+| `data/nNova.gfxNN.dat.tns` | Graphics payloads in sprite/frame order |
+| `data/nNova.*.font.dat.tns` | Five shared font groups |
+| `data/nNova.*.locale.dat.tns` | Eleven independently loaded languages |
+| `state/` | Settings, bindings, account progression, scores, current run and local daily records |
 
-Different classes of artwork have different display budgets: ships, ordinary
-enemies, bosses, projectiles, upgrade icons, menu planets and full-screen
-backgrounds do not share a single texture-page downscale factor. Every frame
-retains the original pivot, with the offset adjusted after transparent trimming.
-The scaled pre-trim canvas is also recorded, so animated reveals do not change
-scale as their visible bounds grow.
+The reference format-v3 conversion has **22 data files and 7,579,988 bytes**:
+1,292 sprite records, 2,590 animation frames, 2,447 distinct stored frames,
+three graphics packs, five font groups and eleven languages. Metadata and
+graphics total 5,868,281 bytes. Original font-license notices remain in the
+computer deliverable and do not need to be copied to the calculator.
 
-Frames are converted to straight RGB565 + alpha8. Identical converted frames
-share one payload. An individual frame uses raw pixels or a lossless RLE stream,
-whichever is smaller. Packs default to approximately 2 MiB shards, with an
-independent small index. The default retains every source animation frame. It emits the two locales supported by the native UI; `--all-locales` preserves the other source language dictionaries for development without increasing the default calculator installation.
+The preceding v2 reference used 23 files and 9,250,199 bytes. This update saves
+1,670,211 installed bytes. Regenerating into an existing converter output removes
+obsolete nNova.gfxNN.dat.tns fragments. When copying manually, replace the whole
+data directory so obsolete fragments do not consume calculator space. Preserve
+state separately.
 
-The runtime resolves sprite names once, looks up frames by index, and expands
-pixels only when a frame is first required. A fixed 2 MiB arena bounds the
-image cache. Filling it discards the old cache safely; the scene draws a returned
-sprite immediately and never retains pointers across a potential cache flush.
-There is no mandatory per-frame decompression of the active scene. Four multipart enemy assemblies reuse original component sprites; a 233,488-byte fixed cache prepares their mirrored and lit components once, without per-frame image allocation or flipping.
+## Image quality and storage
 
-Font and localization files are separate from graphics. English and Simplified
-Chinese fonts are rasterized from the supplied fonts at the display's UI size.
-Localization files preserve source keys; native game descriptions reflect the
-port's implemented rules instead of showing unresolved PC parameter macros.
+The display adaptation uses RGB565 plus a full eight-bit alpha channel. Source
+images are resampled with an area filter in premultiplied-alpha space. Only fully
+transparent outside margins are removed. Origins, frame order, frame rate and
+original canvas bounds remain in the metadata. Large or thin boss components
+have individual resolution rules. All animation frames are preserved by default.
 
-## Game-state persistence
+Every frame selects an exact representation: raw pixels, whole-pixel run length,
+an exact palette, or separate RGB565 and alpha run-length streams. Identical
+frames share one payload. Format v3 introduces separate color/alpha streams;
+it is selected only when it saves at least 32 bytes and 5% against the previous
+best representation. The format change does not alter decoded pixels.
 
-`state/nNova.cfg.tns` stores versioned settings and score records with a CRC.
-`state/nNova.sav.tns` stores a versioned, size-checked snapshot of the pointer-free
-game state with a CRC and semantic validation. Changing the core layout safely
-rejects incompatible saves rather than reading fields at the wrong offsets.
-Snapshots reset transient input and timing state on resume.
+The complete v2/v3 comparison checks all 2,590 frames and 20,669,277 decoded
+pixel bytes, dimensions, origins, frame identifiers and animation rates. The
+images are byte-identical after decoding. The new launcher still reads older
+supported packs; older launchers cannot read the new v3 representation.
 
-Writes first go to a temporary sibling, preserving an older generation until
-the new file can replace it. An invalidated full-size snapshot records death so
-a failed size check cannot accidentally revive the previous backup. Data files
-are opened read-only and never rewritten by gameplay.
+## Runtime cost
 
-## Public and private outputs
+Graphics are decoded on a cache miss into a bounded 2 MiB pixel cache. Cache
+hits draw directly from decoded pixels. Adjacent animation frames are stored
+together to reduce seeks. Fonts and text use a lossless envelope expanded when
+a language is loaded, outside the per-frame drawing loop.
 
-The public repository and public CI artifacts contain code, conversion tools and
-the launcher. The generated playable package is assembled separately from the
-provided game files. It includes the real `.tns` launcher and verified data packs,
-not a renamed desktop executable or a launcher requiring an online download.
+Separate color/alpha streams reduce flash reads but require more CPU work to
+decode. A desktop memory-only benchmark cannot establish calculator load time.
+Release validation therefore compares both formats on the same ARM launcher and
+scenes, including cold-cache frames. Cached drawing runs neither image decoder.
 
-Coverage of image extraction does not establish coverage of game logic. Native
-mechanics and outstanding differences are tracked separately in `coverage.md`.
+The simulation uses a fixed update step and bounded arrays for enemies,
+projectiles, independent boss components and constructs. Enemy recipes retain
+pending work when the enemy pool is full, instead of discarding the rest of a
+large recipe. Rendering uses integer arithmetic and RGB565. Measurements
+separate simulation, rendering and presentation; a 30 FPS cap can hide useful
+reductions in rendering time.
+
+## Reproducible builds
+
+GitHub Actions builds the real Ndless launcher, desktop preview, static Linux
+converter and Windows converter. It runs gameplay, input and format regressions,
+Unicode path checks and a sanitizer build. LLVM-MinGW is pinned by release and
+SHA-256. The build-time Zopfli encoder is version-pinned and produces a smaller
+compatible zlib stream for the launcher; it is not part of the runtime.
+
+CI uses source code and synthetic fixtures. Converted game data is produced
+separately from the supplied installation. Packaging records the source commit,
+file sizes and SHA-256 digests and creates an empty state directory.

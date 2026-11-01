@@ -60,3 +60,4 @@ GPL-3.0, and the owner's calculator images. Neither the emulator nor the
 images are distributed by this repository. `tools/prepare_firebird.py` only
 prepares an isolated copy of a matching user-supplied NAND/snapshot pair; it
 does not change OS code, application code, or emulated RAM.
+

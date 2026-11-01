@@ -11,28 +11,29 @@ jobs:
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
       - name: Install native and ARM build dependencies
-        run: sudo apt-get update && sudo apt-get install -y clang-18 lld-18 cmake libsdl2-dev
+        run: sudo apt-get update && sudo apt-get install -y clang-18 lld-18 cmake libsdl2-dev python3-venv
+      - name: Install pinned build-time release encoder
+        run: |
+          python3 -m venv build/release-python
+          build/release-python/bin/python -m pip install -r requirements-release.txt
       - name: Build desktop preview and converter
-        run: cmake -S . -B build/host -DCMAKE_BUILD_TYPE=Release && cmake --build build/host --parallel 2
+        run: cmake -S . -B build/host -DCMAKE_BUILD_TYPE=Release -DPython3_EXECUTABLE="$PWD/build/release-python/bin/python" && cmake --build build/host --parallel 2
+      - name: Build standalone Linux converter
+        run: g++ -O3 -std=c++17 -static -s -Iinclude tools/converter/main.cpp -o build/host/converter
       - name: Build real Ndless launcher
         env:
           NOVA_CLANG: clang++-18
           NOVA_LLD: ld.lld-18
-        run: python3 tools/build_ndless.py
+        run: build/release-python/bin/python tools/build_ndless.py --compression zopfli
       - name: Run regression suite
         run: |
           ctest --test-dir build/host --output-on-failure
-          python3 -m unittest discover -s tests -p 'test_*.py'
-          python3 tests/converter_path_test.py --converter build/host/nova-converter
-      - name: Check gameplay memory and integer safety
-        run: |
-          g++ -std=c++17 -O1 -g -Wall -Wextra -Wpedantic -Werror -fsanitize=address,undefined -fno-omit-frame-pointer -Isrc src/game.cpp src/content.cpp tests/game_test.cpp -o build/game-sanitized
-          ASAN_OPTIONS=detect_leaks=0 build/game-sanitized
-      - name: Check complete app flow with sanitizers
+          build/host/converter --self-test
+      - name: Check gameplay and complete app flow with sanitizers
         run: |
           cmake -S . -B build/sanitized -DNOVA_ENABLE_SDL=OFF -DNOVA_SANITIZE=ON -DCMAKE_BUILD_TYPE=Debug
-          cmake --build build/sanitized --target app-flow-tests --parallel 2
-          ASAN_OPTIONS=detect_leaks=0 build/sanitized/app-flow-tests
+          cmake --build build/sanitized --parallel 2
+          ASAN_OPTIONS=detect_leaks=0 ctest --test-dir build/sanitized --output-on-failure
       - name: Verify missing-data screen
         run: build/host/nova-drift --data /tmp/nova-missing/data --headless --frames 2 --screenshot build/missing-data.ppm
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
@@ -41,7 +42,7 @@ jobs:
           archive: true
           path: |
             dist/nNova.tns
-            build/host/nova-converter
+            build/host/converter
             build/host/nova-drift
             build/missing-data.ppm
             README.md
@@ -50,6 +51,9 @@ jobs:
             THIRD_PARTY.md
             third_party/licenses/*.txt
             tools/converter/third_party/*LICENSE.txt
+            tools/converter/third_party/NOTICE.md
+            tools/converter/README.md
+            tools/converter/QUICKSTART.txt
           if-no-files-found: error
   windows-converter:
     runs-on: windows-latest
@@ -77,6 +81,8 @@ jobs:
           path: |
             nova-converter.exe
             tools/converter/README.md
+            tools/converter/QUICKSTART.txt
             tools/converter/third_party/*LICENSE.txt
             tools/converter/third_party/NOTICE.md
           if-no-files-found: error
+

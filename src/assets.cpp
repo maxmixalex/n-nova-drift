@@ -1,5 +1,6 @@
 #include "assets.h"
 #include "platform.h"
+#include "nnova/image_codec.h"
 
 namespace nova {
 namespace {
@@ -57,6 +58,19 @@ struct Stream {
         if (!byte(l) || !byte(h) || !byte(a)) return false;
         c = uint16_t(l | (uint16_t(h) << 8)); return true;
     }
+    bool word(uint16_t& value) {
+        if(fill-pos>=2){value=uint16_t(unsigned(bytes[pos])|(unsigned(bytes[pos+1])<<8));pos+=2;return true;}
+        uint8_t lo,hi;if(!byte(lo)||!byte(hi))return false;
+        value=uint16_t(unsigned(lo)|(unsigned(hi)<<8));return true;
+    }
+    bool read(uint8_t* target,unsigned count) {
+        while(count) {
+            if(pos==fill){if(!left)return false;fill=left<sizeof(bytes)?left:sizeof(bytes);if(!read_all(f,bytes,fill))return false;left-=fill;pos=0;}
+            const unsigned available=fill-pos,n=count<available?count:available;
+            codec::copy_bytes(target,bytes+pos,n);target+=n;pos+=n;count-=n;
+        }
+        return true;
+    }
     bool finished() const { return left == 0 && pos == fill; }
 };
 }
@@ -67,7 +81,7 @@ bool Assets::open(const char* base_path) {
     platform::File* f = platform::open_data("nNova.dat.tns");
     if (!f) { error_ = "Missing data/nNova.dat.tns"; return false; }
     bool ok = read_all(f, &header_, sizeof(header_));
-    ok = ok && magic(header_.magic, "NNOVAC1\0") && header_.version == pack::Version
+    ok = ok && magic(header_.magic, "NNOVAC1\0") && pack::supported_version(header_.version)
         && header_.sprite_count > 0 && header_.sprite_count <= pack::MaxSprites
         && header_.frame_count > 0 && header_.frame_count <= pack::MaxFrames
         && header_.pack_count > 0 && header_.pack_count <= pack::MaxPacks
@@ -99,7 +113,7 @@ bool Assets::open(const char* base_path) {
              && r.decoded_bytes == uint32_t(r.width) * r.height * 3
              && r.decoded_bytes <= pack::CacheBytes && r.offset >= sizeof(pack::DataHeader)
              && r.stored_bytes > 0 && r.stored_bytes <= r.decoded_bytes * 2
-             && r.codec <= pack::Rle565A8;
+             && pack::supported_codec(r.codec,header_.version);
     }
     if (!ok) { close(); error_ = "Invalid or incompatible nNova.dat.tns"; return false; }
     uint32_t pack_lengths[pack::MaxPacks];
@@ -111,7 +125,7 @@ bool Assets::open(const char* base_path) {
         const uint32_t length = platform::length(file);
         ok = read_all(file, &data_header, sizeof(data_header))
              && magic(data_header.magic, "NNOVAP1\0")
-             && data_header.version == pack::Version && data_header.index == i
+             && data_header.version == header_.version && data_header.index == i
              && data_header.file_bytes == length && length >= sizeof(data_header);
         platform::close(file);
         if (!ok) { close(); error_ = "Invalid graphics data pack"; return false; }
@@ -172,28 +186,15 @@ const Sprite* Assets::find_id(unsigned sprite, unsigned frame) {
     if (!f) { ready_ = false; error_ = "Missing graphics data pack"; return 0; }
     pack::DataHeader dh;
     bool ok = read_all(f, &dh, sizeof(dh)) && magic(dh.magic, "NNOVAP1\0")
-        && dh.version == pack::Version && dh.index == r.pack && dh.file_bytes == platform::length(f)
+        && dh.version == header_.version && dh.index == r.pack && dh.file_bytes == platform::length(f)
         && r.offset <= dh.file_bytes && r.stored_bytes <= dh.file_bytes - r.offset
         && platform::seek(f, r.offset);
     const unsigned count = unsigned(r.width) * r.height;
     uint16_t* colors = (uint16_t*)(arena_ + at);
     uint8_t* alpha = arena_ + at + count * 2;
     Stream stream = {f, r.stored_bytes, 0, 0, {0}};
-    unsigned p = 0;
-    while (ok && p < count) {
-        uint8_t command = 0;
-        if (r.codec == pack::Rle565A8) ok = stream.byte(command);
-        unsigned n = r.codec == pack::Raw565A8 ? 1 : unsigned(command & 127) + 1;
-        if (!ok || n > count - p) { ok = false; break; }
-        if (command & 128) {
-            uint16_t c; uint8_t a;
-            ok = stream.pixel(c, a);
-            if (ok) while (n--) { colors[p] = c; alpha[p++] = a; }
-        } else {
-            while (ok && n--) { ok = stream.pixel(colors[p], alpha[p]); ++p; }
-        }
-    }
-    ok = ok && stream.finished(); platform::close(f);
+    ok = ok && codec::decode(stream,r.codec,colors,alpha,count);
+    platform::close(f);
     if (!ok) { ready_ = false; error_ = "Corrupt graphics data pack"; return 0; }
     result.pixels = colors; result.alpha = alpha; result.width = r.width; result.height = r.height;
     result.origin_x = r.origin_x; result.origin_y = r.origin_y;

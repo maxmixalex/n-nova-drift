@@ -3,10 +3,12 @@
 #include "game.h"
 #include <cassert>
 #include <cstdio>
+#include <cstring>
 using namespace nova;
 static Game game;
 static void grant(unsigned id) {
  if(game.player.mods[id])return;
+ if(id==M_X_MASTERY)for(unsigned i=0;i<10;i++)grant(i);
  if(mods[id].prerequisite_a>=0)grant((unsigned)mods[id].prerequisite_a);
  if(mods[id].prerequisite_b>=0)grant((unsigned)mods[id].prerequisite_b);
  assert(game.takeMod(id));
@@ -17,8 +19,9 @@ static uint32_t crc32(const void *ptr,unsigned size) {
  return ~crc;
 }
 int main(int argc,char **argv) {
- if(argc!=2){std::fprintf(stderr,"Usage: late_build_fixture OUTPUT.sav.tns\n");return 2;}
- game.start(0x51544658u);game.wild_mode=true;game.level=45;game.wave=0;game.next_wave=60000;game.xp_next=739;
+ if(argc<2||argc>4){std::fprintf(stderr,"Usage: late_build_fixture OUTPUT.sav.tns [late|death] [OUTPUT.cfg.tns]\n");return 2;}
+ bool death=argc>=3&&std::strcmp(argv[2],"death")==0;
+ game.start(0x51544658u);game.configureCareer(64,true);game.wild_mode=true;game.level=45;game.wave=0;game.next_wave=60000;game.xp_next=739;
  const unsigned mods_to_grant[]={M_FUSILLADE,M_GUIDANCE,M_BURST_FIRE,M_PAYLOAD,M_X_TWIN_STRIKE,M_X_DOUBLE_TAP,M_X_MASTERY,
   M_DRONES,M_ASSAULT_DRONES,M_X_FLEET,M_TURRET,M_WAR_MACHINE,M_ALLY,M_INTERCEPTOR,M_X_ECHO_STRIKE,M_MINES,M_LOADED_MINES,M_X_FARSIGHT};
  for(unsigned i=0;i<sizeof(mods_to_grant)/sizeof(mods_to_grant[0]);i++)grant(mods_to_grant[i]);
@@ -29,10 +32,15 @@ int main(int argc,char **argv) {
  for(unsigned i=0;i<28;i++){int e=game.spawnEnemy(i%6+E_WARDEN,20+(i%7)*50,15+(i/7)*65,i%3==0?1:0);game.enemies[e].hull=game.enemies[e].max_hull=10000;}
  game.spawnEnemy(E_SERAPH,game.worldWidth()/2,35);
  for(unsigned t=0;t<45;t++){GameInput in={};in.fire=true;in.up=t%70<45;in.right=t%140<95;game.tick(in);if(game.state==Upgrade)game.bankUpgrade();}
+ if(death){game.start(0x44454144u);game.configureCareer(64,true);game.wave=12;game.frame=1;game.next_wave=60000;game.player.hull=1;game.player.shield=0;game.player.shield_delay=1000;game.player.invulnerable=0;
+  Bullet &shot=game.bullets[FRIENDLY_BULLETS];shot={};shot.active=shot.owner=1;shot.kind=SHOT_ENEMY;shot.x=game.player.x;shot.y=game.player.y;shot.radius=3;shot.damage=1000;shot.life=100;
+ }
  game.state=Playing;game.resetInput();assert(game.validState());
  struct Snapshot {char magic[8];uint32_t version,bytes,valid,crc;Game game;};
  static Snapshot save;const char magic[8]={'N','N','O','V','A','S','1',0};for(unsigned i=0;i<8;i++)save.magic[i]=magic[i];
- save.version=1;save.bytes=sizeof(Game);save.valid=1;save.game=game;save.crc=crc32(&save.game,sizeof(Game));
+ save.version=2;save.bytes=sizeof(Game);save.valid=1;save.game=game;save.crc=crc32(&save.game,sizeof(Game));
  FILE *f=std::fopen(argv[1],"wb");if(!f)return 3;bool ok=std::fwrite(&save,1,sizeof(save),f)==sizeof(save);std::fclose(f);if(!ok)return 4;
+ if(argc==4){struct Preferences{uint32_t magic,version,flags,high_score,best_wave,runs,language,run_flags,crc;};Preferences cfg={0x4e4f5641u,2,2|4|64,0,0,0,9,0,0};cfg.crc=crc32(&cfg,sizeof(cfg)-4);FILE *config=std::fopen(argv[3],"wb");if(!config)return 5;bool written=std::fwrite(&cfg,1,sizeof(cfg),config)==sizeof(cfg);std::fclose(config);if(!written)return 6;}
+ std::printf("%s ",death?"Imminent-death":"Late-load");
  std::printf("QA fixture: %zu-byte Game, %u enemies, %u bullets, %u constructs, logical arena %dx%d; not a natural playthrough.\n",sizeof(Game),game.enemyCount(),game.bulletCount(),game.constructCount(),game.worldWidth(),game.worldHeight());
 }

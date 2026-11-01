@@ -1,5 +1,7 @@
 #include "localization.h"
 #include "platform.h"
+#include "nnova/native_strings.h"
+#include "packed_file.h"
 
 namespace nova {
 namespace {
@@ -14,14 +16,20 @@ bool terminated(const uint8_t* data,uint32_t offset,uint32_t size) {
     return false;
 }
 }
-bool Locale::open(bool chinese) {
+bool Locale::open(unsigned language) {
     ready_=false;
-    platform::File* f=platform::open_data(chinese?"nNova.zhs.locale.dat.tns":"nNova.eng.locale.dat.tns");
+    language_=language<Count?language:0;
+    char filename[]="nNova.eng.locale.dat.tns";
+    const char* languageCode=code(language_);
+    for(unsigned i=0;i<3;++i)filename[6+i]=languageCode[i];
+    return openFile(filename);
+}
+bool Locale::openFile(const char* filename) {
+    ready_=false;
+    platform::File* f=platform::open_data(filename);
     if(!f)return false;
-    uint32_t size=platform::length(f);
-    if(size<sizeof(Header)||size>sizeof(data_)){platform::close(f);return false;}
-    bool ok=platform::read(f,data_,size)==size;platform::close(f);
-    if(!ok)return false;
+    uint32_t size=0;
+    if(!read_packed(f,data_,sizeof(data_),size)||size<sizeof(Header))return false;
     const Header& h=*reinterpret_cast<const Header*>(data_);
     const char magic[8]={'N','N','O','V','A','L','1',0};
     for(unsigned i=0;i<8;++i)if(h.magic[i]!=magic[i])return false;
@@ -40,6 +48,12 @@ bool Locale::open(bool chinese) {
     ready_=true;return true;
 }
 const char* Locale::get(const char* key) const {
+    if(!key)return 0;
+    // Native additions are translated in every supported language, and remain
+    // available even before an owner's locale pack has been opened.
+    for(unsigned i=0;i<native_text::EntryCount;++i)
+        if(compare(native_text::entries[i].key,key)==0)
+            return native_text::entries[i].values[language_<Count?language_:0];
     if(!ready_)return 0;
     const Header& h=*reinterpret_cast<const Header*>(data_);
     const Entry* entries=reinterpret_cast<const Entry*>(data_+h.records);
@@ -49,6 +63,30 @@ const char* Locale::get(const char* key) const {
     if(low<h.count&&compare(reinterpret_cast<const char*>(data_+entries[low].key),key)==0)
         return reinterpret_cast<const char*>(data_+entries[low].value);
     return 0;
+}
+const char* Locale::text(const char* key,const char* fallback) const {
+    const char* value=get(key);return value&&*value?value:fallback;
+}
+const char* Locale::code(unsigned language) {
+    return native_text::LanguageCodes[language<Count?language:0];
+}
+const char* Locale::name(unsigned language) {
+    return native_text::LanguageNames[language<Count?language:0];
+}
+int Locale::fromSystem(const char* input) {
+    if(!input||!*input)return -1;
+    char tag[32]={0};unsigned n=0;
+    for(;input[n]&&n+1<sizeof(tag);++n){char c=input[n];tag[n]=c>='A'&&c<='Z'?char(c+32):c;}
+    const char* iso2[Count]={"en","de","es","fr","ja","ko","pt","ru","pl","zh","zh"};
+    for(unsigned i=0;i<Count;++i)if(tag[0]==code(i)[0]&&tag[1]==code(i)[1]&&tag[2]==code(i)[2])return int(i);
+    if(tag[0]=='z'&&tag[1]=='h') {
+        for(unsigned i=2;tag[i];++i)
+            if((tag[i]=='t'&&tag[i+1]=='w')||(tag[i]=='h'&&tag[i+1]=='k')||
+               (i+3<sizeof(tag)&&tag[i]=='h'&&tag[i+1]=='a'&&tag[i+2]=='n'&&tag[i+3]=='t'))return 10;
+        return 9;
+    }
+    for(unsigned i=0;i<9;++i)if(tag[0]==iso2[i][0]&&tag[1]==iso2[i][1])return int(i);
+    return -1;
 }
 void Locale::plain(char* out,unsigned cap,const char* input,bool title) {
     if(!cap)return;
@@ -64,13 +102,14 @@ void Locale::plain(char* out,unsigned cap,const char* input,bool title) {
     while(*source==' ')++source;
     unsigned n=0;
     while(*source && n+1<cap) {
+        if(*source=='\r'){++source;continue;}
         if(source[0]=='['&&source[1]=='$'){
             while(*source&&*source!=']')++source;
             if(*source)++source;
             continue;
         }
         if(source[0]=='\\'&&(source[1]=='r'||source[1]=='n')) {
-            if(source[1]=='n')out[n++]=' ';
+            if(source[1]=='n')out[n++]='\n';
             source+=2;continue;
         }
         out[n++]=*source++;
@@ -81,5 +120,52 @@ void Locale::plain(char* out,unsigned cap,const char* input,bool title) {
            static_cast<unsigned char>(out[n-2])==0xbc&&static_cast<unsigned char>(out[n-1])==0x9a)n-=3;
     }
     out[n]=0;
+}
+unsigned Locale::format(char* out,unsigned capacity,const char* source,bool rich) {
+    struct Value { const char* key;const char* plain;const char* percent; };
+    static const Value values[]={
+#include "source_values.inc"
+    };
+    unsigned n=0,unresolved=0;if(!capacity)return 0;
+    while(source&&*source&&n+1<capacity) {
+        if(*source=='\r'){++source;continue;}
+        if(source[0]=='['&&source[1]=='$') {
+            const char* token=source+2;const char* end=token;
+            while(*end&&*end!=']')++end;
+            if(rich&&n+3<capacity) {
+                char style=0;
+                if(token[0]=='='&&token[1]=='*')style='D';
+                else if(token[0]=='='&&token[1]=='/')style='W';
+                else if(token[0]=='='&&token[1]=='r'&&token[2]=='g'&&token[3]=='b')
+                    style=token[5]=='8'?'B':token[5]=='2'&&token[6]=='5'&&token[7]=='0'?'R':'W';
+                if(style){out[n++]=27;out[n++]=style;}
+            }
+            if(token[0]=='='&&token[1]=='{') {
+                token+=2;bool percent=false;char sign=0;
+                while(*token=='%'||*token=='+'||*token=='-') {
+                    if(*token=='%')percent=true;else sign=*token;
+                    ++token;
+                }
+                char key[96]={0};unsigned k=0;
+                while(token<end&&*token!='}'&&k+1<sizeof(key))key[k++]=*token++;
+                unsigned low=0,high=sizeof(values)/sizeof(values[0]);
+                while(low<high){unsigned mid=low+(high-low)/2;if(compare(values[mid].key,key)<0)low=mid+1;else high=mid;}
+                const char* value="?";
+                if(low<sizeof(values)/sizeof(values[0])&&compare(values[low].key,key)==0)
+                    value=percent?values[low].percent:values[low].plain;
+                else ++unresolved;
+                if(sign&&n+1<capacity&&*value!='-')out[n++]=sign;
+                while(*value&&n+1<capacity)out[n++]=*value++;
+                if(percent&&n+1<capacity)out[n++]='%';
+            }
+            source=*end?end+1:end;continue;
+        }
+        if(source[0]=='\\'&&(source[1]=='r'||source[1]=='n')) {
+            if(source[1]=='n'&&(!n||out[n-1]!='\n'))out[n++]='\n';
+            source+=2;continue;
+        }
+        out[n++]=*source++;
+    }
+    out[n]=0;return unresolved;
 }
 }

@@ -65,7 +65,7 @@ def check_run(executable, arguments, cwd, output):
     assert "localization.csv" in result.stderr, result.stderr
     index = (output / "nNova.dat.tns").read_bytes()
     assert index[:8] == b"NNOVAC1\0"
-    assert struct.unpack_from("<3I", index, 8) == (1, 1, 1)
+    assert struct.unpack_from("<3I", index, 8) == (3, 1, 1)
     assert (output / "nNova.gfx00.dat.tns").is_file()
     verified = subprocess.run([str(executable), "--verify-pack", str(output)], cwd=cwd,
                               stdout=subprocess.PIPE, stderr=subprocess.PIPE,

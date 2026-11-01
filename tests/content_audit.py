@@ -39,8 +39,8 @@ def audit(source=None):
             assert original["ModFull"+key].strip() == "[$=*]..."
     return {"source_mods": 180, "adapted_mechanics": sum(r["status"] == "adapted" for r in rows),
             "intentional_empty": 1, "unavailable_placeholders": 2,
-            "numeric_balance": "Independently adjusted for the TI-Nspire port; not extracted YYC constants",
-            "runtime_parity": "Native reimplementation, not execution or decompilation of the original PC runtime",
+            "numeric_balance": "Uses extracted source constants and recovered native rules, with bounded TI-Nspire adaptations; this inventory alone does not establish frame-by-frame numerical equivalence",
+            "runtime_parity": "Bounded native port informed by extracted constants and recovered PC control flow; it does not execute the original runtime or claim frame-by-frame parity",
             "mods": rows}
 
 

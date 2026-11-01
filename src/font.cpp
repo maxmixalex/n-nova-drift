@@ -1,16 +1,22 @@
 #include "font.h"
 #include "platform.h"
+#include "localization.h"
+#include "packed_file.h"
 
 namespace nova {
-bool Font::open(bool chinese) {
+bool Font::open(unsigned language) {
     valid_=false;
-    platform::File* file=platform::open_data(chinese?"nNova.zhs.font.dat.tns":"nNova.eng.font.dat.tns");
+    char filename[]="nNova.eng.font.dat.tns";
+    const char* code=Locale::code(language);
+    for(unsigned i=0;i<3;++i)filename[6+i]=code[i];
+    platform::File* file=platform::open_data(filename);
+    if(!file&&language!=4&&language!=5&&language!=9&&language!=10)
+        file=platform::open_data("nNova.lat.font.dat.tns");
+    if(!file&&language!=4&&language!=5&&language!=9&&language!=10)
+        file=platform::open_data("nNova.eng.font.dat.tns");
     if(!file)return false;
-    uint32_t size=platform::length(file);
-    if(size<sizeof(FontHeader)||size>sizeof(data_)){platform::close(file);return false;}
-    bool success=platform::read(file,data_,size)==size;
-    platform::close(file);
-    if(!success)return false;
+    uint32_t size=0;
+    if(!read_packed(file,data_,sizeof(data_),size)||size<sizeof(FontHeader))return false;
     const FontHeader& header=*reinterpret_cast<const FontHeader*>(data_);
     const char expected[8]={'N','N','O','V','A','F','1',0};
     for(unsigned i=0;i<8;++i)if(header.magic[i]!=expected[i])return false;
@@ -51,6 +57,9 @@ const GlyphRecord* Font::glyph(uint32_t codepoint) const {
     }
     if(low<h.count&&records[low].codepoint==codepoint)return records+low;
     return codepoint=='?'?0:glyph('?');
+}
+bool Font::contains(uint32_t cp) const {
+    const GlyphRecord* g=glyph(cp);return g&&g->codepoint==cp;
 }
 uint32_t next_utf8(const char*& text) {
     const unsigned char* p=reinterpret_cast<const unsigned char*>(text);

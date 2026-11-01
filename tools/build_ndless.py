@@ -17,13 +17,14 @@ ROOT = Path(__file__).resolve().parents[1]
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output", type=Path, default=ROOT / "dist" / "nNova.tns")
+    parser.add_argument("--build-dir", type=Path, default=ROOT / "build" / "ndless")
     parser.add_argument("--compression", choices=("zlib", "zopfli"), default="zlib")
     args = parser.parse_args()
     compiler = os.environ.get("NOVA_CLANG") or shutil.which("clang++") or shutil.which("clang++-18")
     linker = os.environ.get("NOVA_LLD") or shutil.which("ld.lld") or shutil.which("ld.lld-18")
     if not compiler or not linker:
         parser.error("Install clang and lld (LLVM 18 or newer), or set NOVA_CLANG and NOVA_LLD.")
-    directory = ROOT / "build" / "ndless"
+    directory = args.build_dir.resolve()
     directory.mkdir(parents=True, exist_ok=True)
     sources = sorted((ROOT / "src").glob("*.cpp")) + [ROOT / "platform/ndless/freestanding.cpp", ROOT / "platform/ndless/entry.S"]
     flags = ["--target=arm-none-eabi", "-mcpu=arm926ej-s", "-marm", "-mfloat-abi=soft", "-mno-unaligned-access",
